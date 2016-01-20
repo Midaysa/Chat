@@ -6,7 +6,7 @@
 #include <stdbool.h>            // bool, true, false
 #include "errorHandling.h"      // error messages
 
-
+const char *LogOutMessage = "Logging out... Thank you for using our services!\n";
 
 typedef struct Client
 
@@ -108,7 +108,7 @@ void status(Client* client, char* estado)
 void logOut(Client client)
 
 {
-
+	printf(LogOutMessage,"%s");
 	exit(0);
 }
 
@@ -125,12 +125,13 @@ int main()
     write(fifo, "hola!", 6);
     printf("now here\n");
 
+
     // Prueba de estado
 
     // Reservo el espacio de memoria
 
-    status(&client_Prueba,"hola soy un estado!");
-    status(&client_Prueba,"hola soy el segundo estado!");
+    status(&client_Prueba,"hola soy un estado!\n");
+    status(&client_Prueba,"hola soy el segundo estado!\n");
     printf(client_Prueba.estado,"%s");
-    sleep(5);
+    logOut(client_Prueba);
 }
