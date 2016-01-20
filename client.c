@@ -83,10 +83,11 @@ void status(Client client, char* estado)
 void logOut(Client client)
 
 {
-
+	exit(0);
 }
 
-int main() {
+int main()
+{
     int fifo = open("servidor", O_WRONLY);
     if (fifo == -1) perror(getError(openError,__LINE__,__FILE__));
     
