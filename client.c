@@ -6,6 +6,8 @@
 #include <stdbool.h>            // bool, true, false
 #include "errorHandling.h"      // error messages
 
+
+
 typedef struct Client
 
 {
@@ -15,6 +17,9 @@ typedef struct Client
 	struct Client *anterior;
 
 } Client;
+
+// Defino un constructor para esta clase
+#define INIT_CLIENT(nuevo) Client nuevo = {.nombre = NULL, .estado =NULL, .siguiente = NULL, .anterior = NULL}
 
 typedef struct Message
 
@@ -57,7 +62,7 @@ void who(Client client)
  * @Salida:  Imprime en pantalla
  */
 
-void writeTo(Client client,Client clientToWrite)
+void writeTo(Client* client,Client* clientToWrite)
 
 {
 
@@ -75,9 +80,20 @@ void writeTo(Client client,Client clientToWrite)
  * @Salida:  Imprime en pantalla
  */
 
-void status(Client client, char* estado)
+void status(Client* client, char* estado)
 
 {
+	// Si ya existe un estado anterior libero la memoria
+
+	if (client -> estado)
+	{
+		// Liberamos la memoria utilizada por el
+		free(client -> estado);
+	}
+	// Reservamos la memoria para el nuevo estado
+	client -> estado = (char *) malloc(strlen(estado));
+	// Obtenemos el estado del cliente dado y lo actualizamos
+	strcpy(client -> estado, estado);
 
 }
 
@@ -92,6 +108,7 @@ void status(Client client, char* estado)
 void logOut(Client client)
 
 {
+
 	exit(0);
 }
 
@@ -99,9 +116,21 @@ int main()
 {
     int fifo = open("servidor", O_WRONLY);
     if (fifo == -1) perror(getError(openError,__LINE__,__FILE__));
+
+    // Creo clientes de prueba
     
+    INIT_CLIENT(client_Prueba);
+
     printf("here\n");
     write(fifo, "hola!", 6);
     printf("now here\n");
+
+    // Prueba de estado
+
+    // Reservo el espacio de memoria
+
+    status(&client_Prueba,"hola soy un estado!");
+    status(&client_Prueba,"hola soy el segundo estado!");
+    printf(client_Prueba.estado,"%s");
     sleep(5);
 }
