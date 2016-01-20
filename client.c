@@ -16,6 +16,15 @@ typedef struct Client
 
 } Client;
 
+typedef struct Message
+
+{
+	char* text;
+	struct Client *sender;
+	struct Client *reciever;
+
+} Message;
+
 /* @Nombre: Quien
  * @Funcion: Esta orden muestra una lista de los usuarios conectados al
  * 			 servidor y el estado de cada uno.
