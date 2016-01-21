@@ -19,7 +19,7 @@ typedef struct Client
 } Client;
 
 // Defino un constructor para esta clase
-#define INIT_CLIENT(nuevo) Client nuevo = {.nombre = NULL, .estado =NULL, .siguiente = NULL, .anterior = NULL}
+#define INIT_CLIENT(new) Client new = {.nombre = NULL, .estado =NULL, .siguiente = NULL, .anterior = NULL}
 
 typedef struct Message
 
@@ -29,6 +29,10 @@ typedef struct Message
 	struct Client *reciever;
 
 } Message;
+
+// Defino un constructor para esta clase
+#define INIT_MESSAGE(new) Message new = {.text = NULL, .sender =NULL, .reciever = NULL}
+
 
 /* @Nombre: Quien
  * @Funcion: Esta orden muestra una lista de los usuarios conectados al
