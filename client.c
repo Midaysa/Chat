@@ -6,6 +6,11 @@
 #include <stdbool.h>            // bool, true, false
 #include "errorHandling.h"      // error messages
 
+
+#define BASIC_PERMISSIONS 0666
+#define MSG_LEN 500
+
+
 const char *LogOutMessage = "Logging out... Thank you for using our services!\n";
 
 typedef struct Client
@@ -116,26 +121,46 @@ void logOut(Client client)
 	exit(0);
 }
 
-int main()
-{
-    int fifo = open("servidor", O_WRONLY);
-    if (fifo == -1) perror(getError(openError,__LINE__,__FILE__));
-
-    // Creo clientes de prueba
-    
-    INIT_CLIENT(client_Prueba);
-
-    printf("here\n");
-    write(fifo, "hola!", 6);
-    printf("now here\n");
 
 
-    // Prueba de estado
+int main() {
+    char in_file_name[11], out_file_name[11]; // nombre de los pipes de entrada
+                                              // y salida de cada usuario
+    int fifo = open("servidor", O_WRONLY);    // abre el pipe "servidor para
+                                              // solicitar una nueva conexion
+    int r;                                    // numero random entre
+                                              // 1000000000 y 2000000000-1
+    int fifo_in, fifo_out;                    // pipes de entrada/salida
+    char message[MSG_LEN];
 
-    // Reservo el espacio de memoria
 
-    status(&client_Prueba,"hola soy un estado!\n");
-    status(&client_Prueba,"hola soy el segundo estado!\n");
-    printf(client_Prueba.estado,"%s");
-    logOut(client_Prueba);
+    srand(time(NULL));                        // inicializa semilla del random
+
+    // convierte r a char y lo almacena en in_file_name
+    r = rand() % 1000000000 + 1000000000;
+    sprintf(in_file_name, "%d", r);
+
+    r = rand() % 1000000000 + 1000000000;
+    sprintf(out_file_name, "%d", r);
+    printf("%s %s\n", in_file_name, out_file_name);
+
+    // message = in_file_name + ' ' + out_file_name
+    sprintf(message, "%s %s\n", in_file_name, out_file_name);
+
+    // crear pipe (nominal) de entrada
+    mkfifo(in_file_name, BASIC_PERMISSIONS | O_NONBLOCK);
+    // crear pipe (nominal) de salida
+    mkfifo(out_file_name, BASIC_PERMISSIONS | O_NONBLOCK);
+    // abrir el pipe para leer las conexiones entrantes
+    fifo_in = open(in_file_name, BASIC_PERMISSIONS | O_NONBLOCK);
+    // abrir el pipe para enviar datos
+    fifo_out = open(out_file_name, BASIC_PERMISSIONS | O_NONBLOCK);
+
+
+    if (fifo == -1) perror (getError(openError,__LINE__,__FILE__));
+
+    write(fifo, message, strlen(message));
+
+    // nos aseguramos de que el SO ya escribio el mensaje en el pipe antes de cerrar la app
+    sleep(1);
 }
