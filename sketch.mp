@@ -1,5 +1,6 @@
 http://www.lowtek.com/sockets/select.html
 http://www.beej.us/guide/bgnet/output/html/multipage/selectman.html
+http://digi-cron.com:8080/programmations/c/lectures/5-fifos.html
 
 server
     crear pipe (nominal) 'conexiones_nuevas'
