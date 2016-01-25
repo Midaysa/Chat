@@ -4,7 +4,8 @@
 #include <sys/queue.h>          // list macros
 #include <stdlib.h>             // malloc, free
 #include <stdbool.h>            // bool, true, false
-#include "errorHandling.h"      // error messages
+#include <string.h>             // strlen
+//#include "errorHandling.h"      // error messages
 
 
 #define BASIC_PERMISSIONS 0666
@@ -100,9 +101,10 @@ void status(Client* client, char* estado)
 		free(client -> estado);
 	}
 	// Reservamos la memoria para el nuevo estado
-	client -> estado = (char *) malloc(strlen(estado));
+	//client -> estado = (char *) malloc(strlen(estado));
+	
 	// Obtenemos el estado del cliente dado y lo actualizamos
-	strcpy(client -> estado, estado);
+	//strcpy(client -> estado, estado);
 
 }
 
@@ -124,17 +126,23 @@ void logOut(Client client)
 
 
 int main() {
+    int len;
     char in_file_name[11], out_file_name[11]; // nombre de los pipes de entrada
                                               // y salida de cada usuario
-    int fifo = open("servidor", O_WRONLY);    // abre el pipe "servidor para
+    int fifo;                                 // pipe "servidor para
                                               // solicitar una nueva conexion
+    int in_fd, out_fd;                        // pipes de entrada/salida
     int r;                                    // numero random entre
                                               // 1000000000 y 2000000000-1
-    int fifo_in, fifo_out;                    // pipes de entrada/salida
     char message[MSG_LEN];
-
-
+    
     srand(time(NULL));                        // inicializa semilla del random
+
+    // abrir pipe publico de conexiones nuevas del servidor
+    fifo = open("servidor", O_WRONLY);
+    
+    //if (fifo == -1) perror (getError(openError,__LINE__,__FILE__));
+    if (fifo == -1) perror("mkfifo");
 
     // convierte r a char y lo almacena en in_file_name
     r = rand() % 1000000000 + 1000000000;
@@ -148,19 +156,28 @@ int main() {
     sprintf(message, "%s %s\n", in_file_name, out_file_name);
 
     // crear pipe (nominal) de entrada
-    mkfifo(in_file_name, BASIC_PERMISSIONS | O_NONBLOCK);
+    mkfifo(in_file_name, BASIC_PERMISSIONS, O_NONBLOCK);
     // crear pipe (nominal) de salida
     mkfifo(out_file_name, BASIC_PERMISSIONS | O_NONBLOCK);
-    // abrir el pipe para leer las conexiones entrantes
-    fifo_in = open(in_file_name, BASIC_PERMISSIONS | O_NONBLOCK);
-    // abrir el pipe para enviar datos
-    fifo_out = open(out_file_name, BASIC_PERMISSIONS | O_NONBLOCK);
-
-
-    if (fifo == -1) perror (getError(openError,__LINE__,__FILE__));
-
+    
     write(fifo, message, strlen(message));
+    close(fifo);
+    // abrir el pipe para leer datos
+    in_fd = open(in_file_name, O_RDONLY);
+    // abrir el pipe para enviar datos
+    out_fd = open(out_file_name, O_WRONLY);
 
+
+    char mensaje[50];
+    len = read(in_fd, mensaje, 50);
+    printf("len = %d\n", len);
+    
+    close(in_fd);
+    close(out_fd);
+    printf("mensaje = %s.\n", mensaje);
+    
     // nos aseguramos de que el SO ya escribio el mensaje en el pipe antes de cerrar la app
     sleep(1);
+    unlink(in_file_name);
+    unlink(out_file_name);
 }

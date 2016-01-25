@@ -7,7 +7,8 @@
 #include <stdlib.h>             // malloc, free
 #include <stdbool.h>            // bool, true, false
 #include <unistd.h>             // unlink
-#include "errorHandling.h"      // error messages
+#include <string.h>             // strlen
+//#include "errorHandling.h"      // error messages
 
 
 #define MSG_LEN 500
@@ -29,7 +30,8 @@ int open_fifo(const char *fifo_name) {
     // abrir el pipe para leer conexiones entrantes
     fifo = open(fifo_name, O_RDONLY | O_NONBLOCK);
 
-    if (fifo == -1) perror (getError(mkfifoError,__LINE__,__FILE__);
+    //if (fifo == -1) perror(getError(mkfifoError,__LINE__,__FILE__));
+    if (fifo == -1) perror("mkfifo");
 
     return fifo;
 }
@@ -59,9 +61,10 @@ int main() {
         char status[140];
         int friends[N];
         int in_fd, out_fd;
-    }
+    };
     // EN CONSTRUCCION
 
+    struct client c1;
 
     while (true) {
         printf("escuchando conexiones...\n");
@@ -78,7 +81,8 @@ int main() {
         rv = select(n, &fdset, NULL, NULL, &tv);
 
         if (rv == -1) {                 // error chequeando pipes
-            perror((getError(selectError,__LINE__,__FILE__)));
+            //perror((getError(selectError,__LINE__,__FILE__)));
+            perror("rvError");
         }
         else if (rv > 0) {              // existen archivos con datos para leer
 
@@ -88,11 +92,20 @@ int main() {
                 // agregar informacion del nuevo usuario al lista
                 // leer del pipe fifo los id's de los pipes del cliente
                 read(fifo, message, MSG_LEN);
-                sscanf(message, "%s %s", in_file_name, out_file_name);
+                sscanf(message, "%s %s", out_file_name, in_file_name);
                 printf("%s %s\n", in_file_name, out_file_name);
+                close(fifo);
                 fifo = open_fifo("servidor");
+
+                char mensaje[] = "El servidor esta enviando datos...";
+                printf("%s -- %d\n", mensaje, strlen(mensaje));
+                c1.in_fd = open(in_file_name, O_RDONLY | O_NONBLOCK);
+                c1.out_fd = open(out_file_name, O_WRONLY | O_NONBLOCK);
+                write(c1.out_fd, mensaje, strlen(mensaje)+1);
             }
         }
+    
+        
         sleep(1);
     }
 }
