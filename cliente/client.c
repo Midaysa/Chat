@@ -5,7 +5,7 @@
 #include <stdlib.h>             // malloc, free
 #include <stdbool.h>            // bool, true, false
 #include <string.h>             // strlen
-//#include "errorHandling.h"      // error messages
+#include "../errorHandling.h"      // error messages
 
 
 #define BASIC_PERMISSIONS 0666
@@ -141,7 +141,7 @@ int main() {
     // abrir pipe publico de conexiones nuevas del servidor
     fifo = open("servidor", O_WRONLY);
     
-    //if (fifo == -1) perror (getError(openError,__LINE__,__FILE__));
+    if (fifo == -1) perror(getError(openError,__LINE__,__FILE__));
     if (fifo == -1) perror("mkfifo");
 
     // convierte r a char y lo almacena en in_file_name
