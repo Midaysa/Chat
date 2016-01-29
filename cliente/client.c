@@ -5,7 +5,7 @@
 #include <stdlib.h>             // malloc, free
 #include <stdbool.h>            // bool, true, false
 #include <string.h>             // strlen
-#include "errorHandling.h"      // error messages
+#include "../errorHandling.h"      // error messages
 
 
 #define BASIC_PERMISSIONS 0666
@@ -108,6 +108,8 @@ char* getWord(char* string,char* delimeter,int index)
 void who(Client client)
 
 {
+	// Enviamos la orden al servidor de los datos que necesitamos
+
 	char* buffer; //Variable en la que guardaremos los datos que vamos recibir del pipe
 	int length;
 
@@ -211,7 +213,6 @@ int main() {
     fifo = open("servidor", O_WRONLY);
     
     if (fifo == -1) perror(getErrorMessage(openError,__LINE__,__FILE__));
-    if (fifo == -1) perror("mkfifo");
 
     // convierte r a char y lo almacena en in_file_name
     r = rand() % 1000000000 + 1000000000;
