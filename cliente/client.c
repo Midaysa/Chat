@@ -5,7 +5,7 @@
 #include <stdlib.h>             // malloc, free
 #include <stdbool.h>            // bool, true, false
 #include <string.h>             // strlen
-#include "../errorHandling.h"      // error messages
+#include "errorHandling.h"      // error messages
 
 
 #define BASIC_PERMISSIONS 0666
@@ -39,6 +39,61 @@ typedef struct Message
 // Defino un constructor para esta clase
 #define INIT_MESSAGE(new) Message new = {.text = NULL, .sender =NULL, .reciever = NULL}
 
+/* @Nombre:  getWord
+ * @Funcion: Esta orden muestra una lista de los usuarios conectados al
+ * 			 servidor y el estado de cada uno.
+			 La lista desplegada por la orden quien se mostrará en la ventana
+			 de conversación.
+
+ * @Entrada: char* string cadena a separar, char delimeter: cliente que hace la busqueda,
+ * int index numero de la palabra que se quiere obtener
+ * @Salida:  Imprime en pantalla
+ */
+
+char* getWord(char* string,char* delimeter,int index)
+
+{
+	// Si la lista es nula entonces abandonamos la funcion
+
+	if (string == NULL)
+	{
+		return NULL;
+	}
+
+	char* stringCopy; //Copia del string original para no cambiarlo
+	char* word; // Palabra a ser obtenida
+	int i; // Iterador
+	char** stringCopyPointer; // Apuntador a la copia del string necesaria para la funcion strsep
+
+	// Reservamos la memoria para la copia del string
+
+	stringCopy = (char *) malloc(strlen(string));
+	strcpy(stringCopy, string);
+	stringCopyPointer  = &stringCopy;
+	word = (char *) malloc(strlen(string));
+
+	// Recorremos la lista de palabras obteniendo sus palabras una a una
+
+	for ( i = 0; i <= index; i = i + 1 )
+	{
+		strcpy(word, strsep(stringCopyPointer,delimeter));
+
+		// Si la palabra es igual al string completo, nos salimos de la funcion
+
+		if(stringCopy == NULL)
+		{
+			return word;
+		}
+
+	}
+
+	// Si no ocurrieron ninguno de los casos anteriores entonces debimos obtener la palabra deseada
+
+	free(stringCopy);
+	free(stringCopyPointer);
+	return word;
+}
+
 
 /* @Nombre: Quien
  * @Funcion: Esta orden muestra una lista de los usuarios conectados al
@@ -53,6 +108,20 @@ typedef struct Message
 void who(Client client)
 
 {
+	char* buffer; //Variable en la que guardaremos los datos que vamos recibir del pipe
+	int length;
+
+	// Recibimos la longitud de los datos que vamos recibir
+
+	int aInt = 368;
+	char str[15];
+	sprintf(buffer, "%d", aInt);
+
+	// Recibimos La lista de usuarios
+
+	// Transformamos la lista
+
+	char *strsep(char **stringp, const char *delim);
 
 }
 
@@ -95,16 +164,16 @@ void status(Client* client, char* estado)
 {
 	// Si ya existe un estado anterior libero la memoria
 
-	if (client -> estado)
+	if (client -> estado != NULL)
 	{
 		// Liberamos la memoria utilizada por el
 		free(client -> estado);
 	}
 	// Reservamos la memoria para el nuevo estado
-	//client -> estado = (char *) malloc(strlen(estado));
+	client -> estado = (char *) malloc(strlen(estado));
 	
 	// Obtenemos el estado del cliente dado y lo actualizamos
-	//strcpy(client -> estado, estado);
+	strcpy(client -> estado, estado);
 
 }
 
@@ -141,7 +210,7 @@ int main() {
     // abrir pipe publico de conexiones nuevas del servidor
     fifo = open("servidor", O_WRONLY);
     
-    if (fifo == -1) perror(getError(openError,__LINE__,__FILE__));
+    if (fifo == -1) perror(getErrorMessage(openError,__LINE__,__FILE__));
     if (fifo == -1) perror("mkfifo");
 
     // convierte r a char y lo almacena en in_file_name
@@ -175,7 +244,10 @@ int main() {
     close(in_fd);
     close(out_fd);
     printf("mensaje = %s.\n", mensaje);
-    
+
+
+
+
     // nos aseguramos de que el SO ya escribio el mensaje en el pipe antes de cerrar la app
     sleep(1);
     unlink(in_file_name);
