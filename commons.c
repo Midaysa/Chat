@@ -133,3 +133,66 @@ int open_fifo(const char *fifo_name) {
 
     return fifo;
 }
+
+// Agrega un cliente nuevo al arreglo de clientes
+
+void addNewClient(ClientList* clientlist, Client client)
+{
+	Client* clientPointer;
+
+	if (clientlist->size > 0)
+	{
+		// Agregamos un slot nuevo en la memoria
+		clientlist->client = (Client *) realloc(clientlist->client,(sizeof(Client *) * clientlist->size + 1));
+	}
+	else
+	{
+		clientPointer = clientlist->client;
+		// Agregamos un slot nuevo en la memoria
+		clientlist->client = (Client *) malloc(sizeof(Client *));
+	}
+
+	// Agregamos al nuevo usuario a la lista
+	clientlist->client[clientlist->size] = client;
+	clientlist->size = clientlist->size + 1;
+
+}
+
+// Remueve a un cliente del arreglo de clientes
+
+void removeClient(ClientList* clientlist, Client client)
+{
+	int i;
+
+	// Recorremos el arreglo
+
+	for (i = 0; i < clientlist->size; i = i + 1)
+	{
+		// Cuando encontremos al cliente que buscamos procedemos a removerlo
+
+		if (memcmp(&(clientlist->client[i]),&client,sizeof(Client)))
+		{
+			// Liberamos la memoria
+			Client* clientPointer = &(clientlist->client[i]);
+			free(clientPointer);
+			// Reservamos memoria nueva
+			clientPointer = &(clientlist->client[i]);
+			clientPointer = (Client *) malloc(sizeof(Client));
+
+			int j;
+
+			// Movemos los miembros del arreglo posteriores una casilla hacia atras
+			for(j = i + 1; i < clientlist->size; j = j + 1)
+			{
+				clientlist->client[j - 1] = clientlist->client[j];
+			}
+
+			// Liberamos el ultimo puesto
+			free(&(clientlist->client[clientlist->size]));
+			// Disminuimos el tamaño
+			clientlist->size = clientlist->size - 1;
+			break;
+		}
+	}
+}
+

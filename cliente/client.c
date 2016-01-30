@@ -180,7 +180,21 @@ int main() {
     char message[MSG_LEN];
     
     srand(time(NULL));                        // inicializa semilla del random
+
+    // Prueba Who
+
     who();
+
+    // Prueba con lista de clientes
+
+    INIT_CLIENTLIST(listaPrueba);
+    INIT_CLIENT(cliente1,"Pepe");
+    INIT_CLIENT(cliente2,"Francisco");
+
+    ClientList* clientListPointer = &listaPrueba;
+    addNewClient(clientListPointer, cliente1);
+    addNewClient(clientListPointer, cliente2);
+    removeClient(clientListPointer, cliente1);
 
     // abrir pipe publico de conexiones nuevas del servidor
     fifo = open("servidor", O_WRONLY);

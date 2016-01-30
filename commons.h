@@ -12,23 +12,23 @@
 #define BASIC_PERMISSIONS 0666
 #define N 100
 
+// CONSTANTES
+
 extern const char *mkfifoError;
 extern const char *selectError;
 extern const char *openError;
 
-const char *LogOutMessage;
-const char *successMessage;
+extern const char *LogOutMessage;
+extern const char *successMessage;
 
 // Ordenes Cliente->Servidor
 
-const char *whoOrder;
-const char *writeToOrder;
-const char *statusOrder;
-const char *logOutOrder;
+extern const char *whoOrder;
+extern const char *writeToOrder;
+extern const char *statusOrder;
+extern const char *logOutOrder;
 
-char* getErrorMessage(const char* errorMessage,int line, char* file);
-char* getWord(char* string,char* delimeter,int index);
-int open_fifo(const char *fifo_name);
+// ESTRUCTURAS
 
 typedef struct Client
 
@@ -40,9 +40,22 @@ typedef struct Client
 
 } Client;
 
+// Tipo estructurado para la lista de usuarios
+
+typedef struct ClientList
+
+{
+	struct Client* client;
+	int size;
+
+} ClientList;
 
 // Defino un constructor para esta clase
-#define INIT_CLIENT(new) Client new = {.nombre = NULL, .estado =NULL, .siguiente = NULL, .anterior = NULL}
+#define INIT_CLIENTLIST(new) ClientList new = {.client = NULL, .size = 0}
+
+
+// Defino un constructor para esta clase
+#define INIT_CLIENT(new,name) Client new = {.nombre = name, .estado =NULL}
 
 typedef struct Message
 
@@ -55,5 +68,14 @@ typedef struct Message
 
 // Defino un constructor para esta clase
 #define INIT_MESSAGE(new) Message new = {.text = NULL, .sender =NULL, .reciever = NULL}
+
+// FUNCIONES
+
+void addNewClient(ClientList* clientlist, Client client);
+void removeClient(ClientList* clientlist, Client client);
+char* getErrorMessage(const char* errorMessage,int line, char* file);
+char* getWord(char* string,char* delimeter,int index);
+int open_fifo(const char *fifo_name);
+
 
 #endif /* COMMONS_H_ */
