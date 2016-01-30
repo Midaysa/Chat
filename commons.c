@@ -157,7 +157,6 @@ int compareClients(Client client1, Client client2)
 
 }
 
-
 // Agrega un cliente nuevo al arreglo de clientes
 
 void addNewClient(ClientList* clientlist, Client client)

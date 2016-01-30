@@ -25,6 +25,9 @@
 void who()
 
 {
+	// creamos la orden necesaria para enviarla al servidor servidor
+	char* orderToSend = (char *) malloc(strlen(whoOrder));
+
 	// Datos de prueba, estos seran substituidos por los que envie el pipe
 
 	char* prueba_Lista = "Francisco - Estoy triste :( | Pepe - Estoy feliz =D";
@@ -81,6 +84,8 @@ void who()
 
     }
 
+    // Liberamos la memoria utilizada para enviar la orden
+    free(orderToSend);
 
 }
 
@@ -100,10 +105,19 @@ void who()
  * @Salida:  Imprime en pantalla
  */
 
-void writeTo(Client* client,Client* clientToWrite)
+void writeTo(char* username,char* userNameToWrite,char* message)
 
 {
+	// creamos la orden necesaria para enviarla al servidor servidor
+	char* orderToSend = (char *) malloc(strlen(writeToOrder)
+			+ strlen("-") + strlen(username)
+			+ strlen(">") + strlen(userNameToWrite)
+			+ strlen("|") + strlen(message));
 
+	sprintf(orderToSend,"%s-%s>%s|%s",writeToOrder,username,userNameToWrite,message);
+
+	// Liberamos la memoria utilizada para enviar la orden
+	free(orderToSend);
 }
 
 /* @Nombre: Estoy
@@ -123,8 +137,9 @@ void status(Client* client, char* estado)
 {
 	// CLIENTE
 
-	char* newOrder = (char *) malloc(strlen(whoOrder) + strlen("-") + strlen(estado));
-	sprintf(newOrder,"%s-%s",whoOrder,estado);
+	// creamos la orden necesaria para enviarla al servidor servidor
+	char* orderToSend = (char *) malloc(strlen(whoOrder) + strlen("-") + strlen(estado));
+	sprintf(orderToSend,"%s-%s",whoOrder,estado);
 
 	// Enviar al servidor
 
@@ -149,6 +164,9 @@ void status(Client* client, char* estado)
 	// Obtenemos el estado del cliente dado y lo actualizamos
 	strcpy(client -> estado, estado);
 
+	// Liberamos la memoria utilizada para enviar la orden
+	free(orderToSend);
+
 }
 
 /* @Nombre: Salir
@@ -159,10 +177,17 @@ void status(Client* client, char* estado)
  * @Salida:  Imprime en pantalla
  */
 
-void logOut(Client client)
+void logOut(char* userName)
 
 {
+	// creamos la orden necesaria para enviarla al servidor servidor
+	char* orderToSend = (char *) malloc(strlen(logOutOrder) + strlen("-") + strlen(userName));
+	sprintf(orderToSend,"%s-%s",whoOrder,userName);
+
 	printf(LogOutMessage,"%s");
+
+	// Liberamos la memoria utilizada para enviar la orden
+	free(orderToSend);
 	exit(0);
 }
 
