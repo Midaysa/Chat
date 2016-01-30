@@ -30,6 +30,8 @@ extern const char *logOutOrder;
 
 // ESTRUCTURAS
 
+// --Client--
+
 typedef struct Client
 
 {
@@ -57,7 +59,7 @@ typedef struct ClientList
 #define INIT_CLIENTLIST(new) ClientList new = {.client = NULL, .size = 0}
 
 
-
+// --Message--
 
 typedef struct Message
 
@@ -69,7 +71,18 @@ typedef struct Message
 } Message;
 
 // Defino un constructor para esta clase
-#define INIT_MESSAGE(new) Message new = {.text = NULL, .sender =NULL, .reciever = NULL}
+#define INIT_MESSAGE(new,text,sender,reciever) Message new = {.text = text, .sender =sender, .reciever = reciever}
+
+typedef struct MessageList
+
+{
+	struct Message* message;
+	int size;
+
+} MessageList;
+
+// Defino un constructor para esta clase
+#define INIT_MESSAGELIST(new) MessageList new = {.message = NULL, .size = 0}
 
 // FUNCIONES
 

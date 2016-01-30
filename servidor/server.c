@@ -86,10 +86,16 @@ void whoServer(ClientList* clientlist,int pipeId)
  * @Salida:  Imprime en pantalla
  */
 
-void writeToServer(Client* client,Client* clientToWrite)
+void writeToServer(Client* client,Client* clientToWrite, char* message)
 
 {
+	/*
+	 * Defino un constructor para esta clase
+		#define INIT_MESSAGE(new,text,sender,reciever)
+		Message new = {.text = text, .sender =sender, .reciever = reciever}
+	 */
 
+	//INIT_MESSAGE(newMessage,message,client,clientToWrite);
 }
 
 /* @Nombre: Estoy
