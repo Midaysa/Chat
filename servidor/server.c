@@ -8,7 +8,7 @@
 #include <stdbool.h>            // bool, true, false
 #include <unistd.h>             // unlink
 #include <string.h>             // strlen
-#include "errorHandling.h"      // error messages
+#include "../errorHandling.h"      // error messages
 
 
 #define MSG_LEN 500
