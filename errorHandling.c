@@ -13,7 +13,7 @@ const char *mkfifoError = "mkfifo Error";
 const char *selectError = "select Error";
 const char *openError = "open Error";
 
-char* getErrorMessage(char* errorMessage,int line, char* file)
+char* getErrorMessage(const char* errorMessage,int line, char* file)
 
 {
 	// Convertimos el numero de linea en un String

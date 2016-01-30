@@ -37,5 +37,6 @@
 .project
 .cproject
 */Debug/
-server
-client
+servidor/server
+cliente/client
+chat/chat

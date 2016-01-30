@@ -12,6 +12,6 @@ extern const char *mkfifoError;
 extern const char *selectError;
 extern const char *openError;
 
-char* getErrorMessage(char* errorMessage,int line, char* file);
+char* getErrorMessage(const char* errorMessage,int line, char* file);
 
 #endif /* ERRORHANDLING_H_ */

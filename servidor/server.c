@@ -9,13 +9,23 @@
 #include <unistd.h>             // unlink
 #include <string.h>             // strlen
 #include "../errorHandling.h"      // error messages
+// #include "../cliente/client.h"      // error messages
 
 
 #define MSG_LEN 500
 #define BASIC_PERMISSIONS 0666
 #define N 100
+/*
+// Tipo estructurado para la lista de usuarios
 
+typedef struct ClientList
 
+{
+	Client* nombre;
+	int size;
+
+} ClientList;
+*/
 // crea y abre el pipe nominal fifo_name
 // retorna el file descriptor del pipe creado
 int open_fifo(const char *fifo_name) {

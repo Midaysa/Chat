@@ -64,10 +64,13 @@ char* getWord(char* string,char* delimeter,int index)
 	char* word; // Palabra a ser obtenida
 	int i; // Iterador
 	char** stringCopyPointer; // Apuntador a la copia del string necesaria para la funcion strsep
+	char* stringCopyAddress;
+	char* stringCopyPointerAddress;
 
 	// Reservamos la memoria para la copia del string
 
 	stringCopy = (char *) malloc(strlen(string));
+	stringCopyAddress = stringCopy;
 	strcpy(stringCopy, string);
 	stringCopyPointer  = &stringCopy;
 	word = (char *) malloc(strlen(string));
@@ -89,8 +92,7 @@ char* getWord(char* string,char* delimeter,int index)
 
 	// Si no ocurrieron ninguno de los casos anteriores entonces debimos obtener la palabra deseada
 
-	free(stringCopy);
-	free(stringCopyPointer);
+	free(stringCopyAddress);
 	return word;
 }
 
@@ -101,29 +103,69 @@ char* getWord(char* string,char* delimeter,int index)
 			 La lista desplegada por la orden quien se mostrará en la ventana
 			 de conversación.
 
- * @Entrada: Cliente cliente: cliente que hace la busqueda
+ * @Entrada: Ninguna
  * @Salida:  Imprime en pantalla
  */
 
-void who(Client client)
+void who()
 
 {
+	// Datos de prueba, estos seran substituidos por los que envie el pipe
+
+	char* prueba_Lista = "Francisco - Estoy triste :( | Pepe - Estoy feliz =D";
+	char* prueba_Length = "51";
+
 	// Enviamos la orden al servidor de los datos que necesitamos
 
 	char* buffer; //Variable en la que guardaremos los datos que vamos recibir del pipe
 	int length;
 
-	// Recibimos la longitud de los datos que vamos recibir
+	// Recibimos la longitud de los datos que vamos recibir, y
+	// reservamos el espacio para recibir el archivo
 
-	int aInt = 368;
-	char str[15];
-	sprintf(buffer, "%d", aInt);
+	length = atoi(prueba_Length);
+	buffer = (char *) malloc(length);
 
 	// Recibimos La lista de usuarios
 
+	strcpy(buffer, prueba_Lista);
+
 	// Transformamos la lista
 
-	char *strsep(char **stringp, const char *delim);
+    // Prueba
+
+    char** userName;
+    char** userStatus;
+    char** userAndStatus;
+    int i = 0;
+
+    userName = malloc(2 * sizeof(char *));
+    userStatus = malloc(2 * sizeof(char *));
+    userAndStatus = malloc(2 * sizeof(char *));
+
+    // Prueba para ver como transformar la lista de usuarios que nos traeria el pipe
+
+    // Hay dos formatos, los dos juntos o el estado y el nombre por su lado, es cuestion de escoger
+
+    printf("Resultado De Funcion Who \n \n");
+
+    for ( i = 0; i <= 1; i = i + 1 )
+    {
+    	userAndStatus[i] = malloc(strlen(getWord(buffer,"|",i)));
+    	userAndStatus[i] = getWord(buffer,"|",i);
+
+        userName[i] = malloc(strlen(getWord(userAndStatus[i],"-",0)));
+        userName[i] = getWord(userAndStatus[i],"-",0);
+
+        userStatus[i] = malloc(strlen(getWord(userAndStatus[i],"-",1)));
+        userStatus[i] = getWord(userAndStatus[i],"-",1);
+
+        printf("userAndStatus[%d] = %s\n", i,userAndStatus[i]);
+        printf("userName[%d] = %s\n", i,userName[i]);
+        printf("userStatus[%d] = %s\n", i,userStatus[i]);
+
+    }
+
 
 }
 
@@ -208,6 +250,7 @@ int main() {
     char message[MSG_LEN];
     
     srand(time(NULL));                        // inicializa semilla del random
+    who();
 
     // abrir pipe publico de conexiones nuevas del servidor
     fifo = open("servidor", O_WRONLY);
