@@ -187,20 +187,36 @@ int main() {
 
     // Prueba con lista de clientes
 
+    int pruebaIterador;
     INIT_CLIENTLIST(listaPrueba);
     INIT_CLIENT(cliente1,"Pepe");
     INIT_CLIENT(cliente2,"Francisco");
 
+
+
     ClientList* clientListPointer = &listaPrueba;
     addNewClient(clientListPointer, cliente1);
-
-    printf("listaPrueba[0] = %s - %s\n",listaPrueba.client[0].nombre,listaPrueba.client[0].estado);
-
     addNewClient(clientListPointer, cliente2);
 
-    printf("listaPrueba[1] = %s - %s\n",listaPrueba.client[1].nombre,listaPrueba.client[1].estado);
+    printf("Resultado De Funcion NewClient \n \n");
+
+    for (pruebaIterador = 0; pruebaIterador < listaPrueba.size; pruebaIterador = pruebaIterador + 1 )
+    {
+    	printf("listaPrueba[%d] = %s - %s\n",
+    			pruebaIterador,listaPrueba.client[pruebaIterador].nombre,
+				listaPrueba.client[pruebaIterador].estado);
+    }
 
     removeClient(clientListPointer, cliente1);
+
+    printf("Resultado De Funcion removeClient \n \n");
+
+    for (pruebaIterador = 0; pruebaIterador < listaPrueba.size; pruebaIterador = pruebaIterador + 1 )
+    {
+    	printf("listaPrueba[%d] = %s - %s\n",
+    			pruebaIterador,listaPrueba.client[pruebaIterador].nombre,
+				listaPrueba.client[pruebaIterador].estado);
+    }
 
     // Prueba con lista de clientes
 

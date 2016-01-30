@@ -205,9 +205,15 @@ void removeClient(ClientList* clientlist, Client client)
 			{
 				clientlist->client[j - 1] = clientlist->client[j];
 			}
+			Client* arrayCopy;
+			Client* pointerToArray = (clientlist->client);
+			memmove(pointerToArray, pointerToArray, (clientlist->size)*sizeof(Client));
 
-			// Liberamos el ultimo puesto
-			free(&(clientlist->client[clientlist->size]));
+
+			Client* reallocPointerToArray;
+
+			reallocPointerToArray = (Client *) realloc(pointerToArray,(sizeof(Client) * (clientlist->size)));
+
 			// Disminuimos el tamaño
 			clientlist->size = clientlist->size - 1;
 			break;
