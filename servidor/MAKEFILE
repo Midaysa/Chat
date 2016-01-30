@@ -1,8 +1,0 @@
-client: server.o
-	gcc server.o -o server
-
-client.o: server.c server.h errorHandling.c errorHandling.h
-	gcc -c server.c ../errorHandling.c
-
-clean:
-	rm server.o server
