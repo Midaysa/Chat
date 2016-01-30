@@ -40,6 +40,9 @@ typedef struct Client
 
 } Client;
 
+// Defino un constructor para esta clase
+#define INIT_CLIENT(new,name) Client new = {.nombre = name, .estado ="No Status", .friends = NULL,in_fd = NULL,out_fd =NULL}
+
 // Tipo estructurado para la lista de usuarios
 
 typedef struct ClientList
@@ -54,8 +57,7 @@ typedef struct ClientList
 #define INIT_CLIENTLIST(new) ClientList new = {.client = NULL, .size = 0}
 
 
-// Defino un constructor para esta clase
-#define INIT_CLIENT(new,name) Client new = {.nombre = name, .estado =NULL}
+
 
 typedef struct Message
 

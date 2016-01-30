@@ -193,8 +193,16 @@ int main() {
 
     ClientList* clientListPointer = &listaPrueba;
     addNewClient(clientListPointer, cliente1);
+
+    printf("listaPrueba[0] = %s - %s\n",listaPrueba.client[0].nombre,listaPrueba.client[0].estado);
+
     addNewClient(clientListPointer, cliente2);
+
+    printf("listaPrueba[1] = %s - %s\n",listaPrueba.client[1].nombre,listaPrueba.client[1].estado);
+
     removeClient(clientListPointer, cliente1);
+
+    // Prueba con lista de clientes
 
     // abrir pipe publico de conexiones nuevas del servidor
     fifo = open("servidor", O_WRONLY);

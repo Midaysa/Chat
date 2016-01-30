@@ -134,6 +134,30 @@ int open_fifo(const char *fifo_name) {
     return fifo;
 }
 
+// Compara 2 clientes
+
+int compareClients(Client client1, Client client2)
+{
+	Client* clientPointer;
+
+	int resultName = !strcmp(client1.nombre,client2.nombre);
+	if (resultName == 0) {resultName = 1;}
+
+	int resultStatus = !strcmp(client1.estado,client2.estado);
+	if (resultStatus == 0) {resultStatus = 1;}
+
+	int resultInFd = client1.in_fd == client2.in_fd;
+
+	int resultOutFd = client1.out_fd == client2.out_fd;
+
+	int resultFriends = !memcmp(client1.friends, client2.friends, sizeof(client1.friends));
+	if (resultFriends == 0) {resultFriends = 1;}
+
+	return (resultName && resultStatus && resultInFd && resultOutFd && resultFriends);
+
+}
+
+
 // Agrega un cliente nuevo al arreglo de clientes
 
 void addNewClient(ClientList* clientlist, Client client)
@@ -143,13 +167,14 @@ void addNewClient(ClientList* clientlist, Client client)
 	if (clientlist->size > 0)
 	{
 		// Agregamos un slot nuevo en la memoria
-		clientlist->client = (Client *) realloc(clientlist->client,(sizeof(Client *) * clientlist->size + 1));
+		clientPointer = (Client *) realloc(clientlist->client,(sizeof(Client) * (clientlist->size + 1)));
+		clientlist->client = clientPointer;
 	}
 	else
 	{
 		clientPointer = clientlist->client;
 		// Agregamos un slot nuevo en la memoria
-		clientlist->client = (Client *) malloc(sizeof(Client *));
+		clientlist->client = (Client *) malloc(sizeof(Client));
 	}
 
 	// Agregamos al nuevo usuario a la lista
@@ -170,19 +195,13 @@ void removeClient(ClientList* clientlist, Client client)
 	{
 		// Cuando encontremos al cliente que buscamos procedemos a removerlo
 
-		if (memcmp(&(clientlist->client[i]),&client,sizeof(Client)))
+		if (compareClients(clientlist->client[i],client))
 		{
-			// Liberamos la memoria
-			Client* clientPointer = &(clientlist->client[i]);
-			free(clientPointer);
-			// Reservamos memoria nueva
-			clientPointer = &(clientlist->client[i]);
-			clientPointer = (Client *) malloc(sizeof(Client));
 
 			int j;
 
 			// Movemos los miembros del arreglo posteriores una casilla hacia atras
-			for(j = i + 1; i < clientlist->size; j = j + 1)
+			for(j = i + 1; j < clientlist->size; j = j + 1)
 			{
 				clientlist->client[j - 1] = clientlist->client[j];
 			}
