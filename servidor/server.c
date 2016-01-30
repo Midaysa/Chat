@@ -24,10 +24,49 @@
  * @Salida:  Imprime en pantalla
  */
 
-void whoServer(int pipeId)
+void whoServer(ClientList* clientlist,int pipeId)
 
 {
+	int i;
+	char* buffer;
+	int bufferSize;
 
+	// Calculamos el tamaño del buffer
+	for (i = 0; i < clientlist ->size; i = i + 1)
+	{
+		bufferSize = bufferSize + strlen(clientlist->client[i].nombre);
+
+		bufferSize = bufferSize + strlen("-");
+
+		bufferSize = bufferSize + strlen(clientlist->client[i].estado);
+
+		// Si no estamos en el ultimo usuario, agregamos un separador
+		if (i < clientlist ->size -1)
+		{
+			bufferSize = bufferSize + strlen("|");
+		}
+	}
+
+	printf("buffer = %d",bufferSize);
+
+	// Reservamos la memoria para el buffer
+
+	buffer = (char *) malloc(bufferSize);
+
+	// Vamos creando el mensaje
+	for (i = 0; i < clientlist ->size; i = i + 1)
+	{
+		sprintf(buffer,"%s%s-%s",buffer,clientlist->client[i].nombre,clientlist->client[i].estado);
+
+		// Si no estamos en el ultimo usuario, agregamos un separador
+		if (i < clientlist ->size -1)
+		{
+			sprintf(buffer,"%s|",buffer);
+		}
+	}
+
+
+	printf("buffer = %s \n \n",buffer);
 
 }
 
@@ -68,6 +107,10 @@ void writeToServer(Client* client,Client* clientToWrite)
 void statusServer(Client* client, char* estado)
 
 {
+
+	// Recibo la data del buffer
+
+
 
 	// Si ya existe un estado anterior libero la memoria
 
@@ -115,6 +158,21 @@ int main() {
          out_file_name[11];
 
     printf("Iniciando servidor!\n");
+
+    // Probando whoServer
+
+    printf("Probando whoServer! \n \n");
+    int pruebaIterador;
+    INIT_CLIENTLIST(listaPrueba);
+    INIT_CLIENT(cliente1,"Pepe");
+    INIT_CLIENT(cliente2,"Francisco");
+
+    ClientList* clientListPointer = &listaPrueba;
+    addNewClient(clientListPointer, cliente1);
+    addNewClient(clientListPointer, cliente2);
+    whoServer(&listaPrueba,0);
+
+    // Probando whoServer
 
     fifo = open_fifo("servidor");
     FD_ZERO(&fdset);            // limpiar el set de pipes nominales

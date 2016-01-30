@@ -135,11 +135,9 @@ void writeTo(char* username,char* userNameToWrite,char* message)
 void status(Client* client, char* estado)
 
 {
-	// CLIENTE
-
 	// creamos la orden necesaria para enviarla al servidor servidor
 	char* orderToSend = (char *) malloc(strlen(whoOrder) + strlen("-") + strlen(estado));
-	sprintf(orderToSend,"%s-%s",whoOrder,estado);
+	sprintf(orderToSend,"%s-%s",statusOrder,estado);
 
 	// Enviar al servidor
 
@@ -147,25 +145,6 @@ void status(Client* client, char* estado)
 
 	// Recibir mensaje de comfirmacion
 
-
-
-	// SERVIDOR (PASAR LUEGO A SERVIDOR)
-
-	// Si ya existe un estado anterior libero la memoria
-
-	if (client -> estado != NULL)
-	{
-		// Liberamos la memoria utilizada por el
-		free(client -> estado);
-	}
-	// Reservamos la memoria para el nuevo estado
-	client -> estado = (char *) malloc(strlen(estado));
-	
-	// Obtenemos el estado del cliente dado y lo actualizamos
-	strcpy(client -> estado, estado);
-
-	// Liberamos la memoria utilizada para enviar la orden
-	free(orderToSend);
 
 }
 
