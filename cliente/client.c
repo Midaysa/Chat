@@ -121,6 +121,21 @@ void writeTo(Client* client,Client* clientToWrite)
 void status(Client* client, char* estado)
 
 {
+	// CLIENTE
+
+	char* newOrder = (char *) malloc(strlen(whoOrder) + strlen("-") + strlen(estado));
+	sprintf(newOrder,"%s-%s",whoOrder,estado);
+
+	// Enviar al servidor
+
+
+
+	// Recibir mensaje de comfirmacion
+
+
+
+	// SERVIDOR (PASAR LUEGO A SERVIDOR)
+
 	// Si ya existe un estado anterior libero la memoria
 
 	if (client -> estado != NULL)

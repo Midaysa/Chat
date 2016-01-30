@@ -3,13 +3,11 @@
 #include <time.h>               // sleep
 #include <fcntl.h>              // O_NONBLOCK, etc
 #include <stdio.h>              // printf
-#include <sys/queue.h>          // list macros
 #include <stdlib.h>             // malloc, free
 #include <stdbool.h>            // bool, true, false
 #include <unistd.h>             // unlink
 #include <string.h>             // strlen
-#include "../errorHandling.h"      // error messages
-#include "../cliente/client.h"      // error messages
+#include "../commons.h"      // error messages
 
 #define MSG_LEN 500
 #define BASIC_PERMISSIONS 0666
@@ -24,26 +22,6 @@ typedef struct ClientList
 	int size;
 
 } ClientList;
-
-// crea y abre el pipe nominal fifo_name
-// retorna el file descriptor del pipe creado
-int open_fifo(const char *fifo_name) {
-    int fifo;
-
-    // eliminar el pipe nominal creado en alguna otra ejecución del server
-    unlink(fifo_name);
-    // esperar 1 seg para que el SO lo elimine completamente
-    sleep(1);
-    // crear pipe (nominal) de conexiones nuevas
-    mkfifo(fifo_name, BASIC_PERMISSIONS | O_NONBLOCK);
-    // abrir el pipe para leer conexiones entrantes
-    fifo = open(fifo_name, O_RDONLY | O_NONBLOCK);
-
-    //if (fifo == -1) perror(getError(mkfifoError,__LINE__,__FILE__));
-    if (fifo == -1) perror("mkfifo");
-
-    return fifo;
-}
 
 
 int main() {
@@ -64,16 +42,9 @@ int main() {
     fifo = open_fifo("servidor");
     FD_ZERO(&fdset);            // limpiar el set de pipes nominales
 
-    // crear contenedor de usuarios
-    struct client {
-        char username[30];
-        char status[140];
-        int friends[N];
-        int in_fd, out_fd;
-    };
-    // EN CONSTRUCCION
+    Client c1;
 
-    struct client c1;
+    // EN CONSTRUCCION
 
     while (true) {
         printf("escuchando conexiones...\n");

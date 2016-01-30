@@ -1,11 +1,11 @@
-server: server.o errorHandling.o
-	gcc server.o errorHandling.o -o server
+server: server.o commons.o
+	gcc server.o commons.o -o server
 
 server.o:
-	gcc -g -c server.c ../errorHandling.c ../cliente/client.h
+	gcc -g -c server.c ../commons.c ../commons.h
 
-errorHandling.o:
-	gcc -g -c ../errorHandling.c
+commons.o:
+	gcc -g -c ../commons.c ../commons.h
 
 clean:
-	rm server.o server
+	rm server.o server commons.o

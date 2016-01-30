@@ -6,7 +6,14 @@
  */
 
 #include <stdlib.h>
+#include <string.h>             // strlen
+#include <stdio.h>              // printf
 #include "commons.h"
+#include <time.h>               // sleep
+#include <fcntl.h>              // O_NONBLOCK, etc
+#include <string.h>             // strlen
+#include <sys/stat.h>           // mkfifo
+
 
 // Mensajes de error
 
@@ -14,7 +21,17 @@ const char *mkfifoError = "mkfifo Error";
 const char *selectError = "select Error";
 const char *openError = "open Error";
 
+// Mensajes de sistema
+
 const char *LogOutMessage = "Logging out... Thank You For Using Our Chat Services!";
+
+// Ordenes Cliente->Servidor
+
+const char *whoOrder = "whoOrder";
+const char *writeToOrder = "writeToOrder";
+const char *statusOrder = "statusOrder";
+const char *logOutOrder = "logOutOrder";
+const char *successMessage = "Operation Successfull";
 
 char* getErrorMessage(const char* errorMessage,int line, char* file)
 
@@ -50,7 +67,7 @@ char* getErrorMessage(const char* errorMessage,int line, char* file)
 	return finalMessage;
 
 }
-
+// Separa un string con el delimitador seleccionado y devuelve la palabra seleccionada con index
 char* getWord(char* string,char* delimeter,int index)
 
 {
@@ -95,4 +112,24 @@ char* getWord(char* string,char* delimeter,int index)
 
 	free(stringCopyAddress);
 	return word;
+}
+
+// crea y abre el pipe nominal fifo_name
+// retorna el file descriptor del pipe creado
+int open_fifo(const char *fifo_name) {
+    int fifo;
+
+    // eliminar el pipe nominal creado en alguna otra ejecución del server
+    unlink(fifo_name);
+    // esperar 1 seg para que el SO lo elimine completamente
+    sleep(1);
+    // crear pipe (nominal) de conexiones nuevas
+    mkfifo(fifo_name, BASIC_PERMISSIONS | O_NONBLOCK);
+    // abrir el pipe para leer conexiones entrantes
+    fifo = open(fifo_name, O_RDONLY | O_NONBLOCK);
+
+    //if (fifo == -1) perror(getError(mkfifoError,__LINE__,__FILE__));
+    if (fifo == -1) perror("mkfifo");
+
+    return fifo;
 }
