@@ -1,11 +1,11 @@
-client: client.o errorHandling.o
-	gcc client.o errorHandling.o -o client
+client: client.o commons.o
+	gcc client.o commons.o -o client
 
 client.o:
-	gcc -g -c client.c ../errorHandling.c
+	gcc -g -c client.c ../commons.c ../commons.h
 	
-errorHandling.o:
-	gcc -g -c ../errorHandling.c
+commons.o:
+	gcc -g -c ../commons.c ../commons.h
 
 clean:
-	rm client.o errorHandling.o client
+	rm client.o commons.o client

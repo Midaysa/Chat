@@ -5,96 +5,11 @@
 #include <stdlib.h>             // malloc, free
 #include <stdbool.h>            // bool, true, false
 #include <string.h>             // strlen
-#include "../errorHandling.h"      // error messages
+#include "../commons.h"         // error messages
 
 
 #define BASIC_PERMISSIONS 0666
 #define MSG_LEN 500
-
-
-const char *LogOutMessage = "Logging out... Thank you for using our services!\n";
-
-typedef struct Client
-
-{
-	char* nombre;
-	char* estado;
-	struct Client *siguiente;
-	struct Client *anterior;
-
-} Client;
-
-// Defino un constructor para esta clase
-#define INIT_CLIENT(new) Client new = {.nombre = NULL, .estado =NULL, .siguiente = NULL, .anterior = NULL}
-
-typedef struct Message
-
-{
-	char* text;
-	struct Client *sender;
-	struct Client *reciever;
-
-} Message;
-
-// Defino un constructor para esta clase
-#define INIT_MESSAGE(new) Message new = {.text = NULL, .sender =NULL, .reciever = NULL}
-
-/* @Nombre:  getWord
- * @Funcion: Esta orden muestra una lista de los usuarios conectados al
- * 			 servidor y el estado de cada uno.
-			 La lista desplegada por la orden quien se mostrará en la ventana
-			 de conversación.
-
- * @Entrada: char* string cadena a separar, char delimeter: cliente que hace la busqueda,
- * int index numero de la palabra que se quiere obtener
- * @Salida:  Imprime en pantalla
- */
-
-char* getWord(char* string,char* delimeter,int index)
-
-{
-	// Si la lista es nula entonces abandonamos la funcion
-
-	if (string == NULL)
-	{
-		return NULL;
-	}
-
-	char* stringCopy; //Copia del string original para no cambiarlo
-	char* word; // Palabra a ser obtenida
-	int i; // Iterador
-	char** stringCopyPointer; // Apuntador a la copia del string necesaria para la funcion strsep
-	char* stringCopyAddress;
-	char* stringCopyPointerAddress;
-
-	// Reservamos la memoria para la copia del string
-
-	stringCopy = (char *) malloc(strlen(string));
-	stringCopyAddress = stringCopy;
-	strcpy(stringCopy, string);
-	stringCopyPointer  = &stringCopy;
-	word = (char *) malloc(strlen(string));
-
-	// Recorremos la lista de palabras obteniendo sus palabras una a una
-
-	for ( i = 0; i <= index; i = i + 1 )
-	{
-		strcpy(word, strsep(stringCopyPointer,delimeter));
-
-		// Si la palabra es igual al string completo, nos salimos de la funcion
-
-		if(stringCopy == NULL)
-		{
-			return word;
-		}
-
-	}
-
-	// Si no ocurrieron ninguno de los casos anteriores entonces debimos obtener la palabra deseada
-
-	free(stringCopyAddress);
-	return word;
-}
 
 
 /* @Nombre: Quien
