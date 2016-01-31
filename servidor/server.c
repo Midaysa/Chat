@@ -20,13 +20,16 @@
 			 La lista desplegada por la orden quien se mostrará en la ventana
 			 de conversación.
 
- * @Entrada: Ninguna
+ * @Entrada: ClientList* clientlist: lista de clientes del sistema
+ * @Entrada: int pipeId: pipe que se utilizara para enviar la informacion
  * @Salida:  Imprime en pantalla
  */
 
 void whoServer(ClientList* clientlist,int pipeId)
 
 {
+	// FORMATO DE arguments == NULL
+
 	int i;
 	char* buffer;
 	int bufferSize;
@@ -47,7 +50,7 @@ void whoServer(ClientList* clientlist,int pipeId)
 		}
 	}
 
-	printf("buffer = %d",bufferSize);
+	printf("bufferSize = %d \n",bufferSize);
 
 	// Reservamos la memoria para el buffer
 
@@ -56,7 +59,14 @@ void whoServer(ClientList* clientlist,int pipeId)
 	// Vamos creando el mensaje
 	for (i = 0; i < clientlist ->size; i = i + 1)
 	{
-		sprintf(buffer,"%s%s-%s",buffer,clientlist->client[i].nombre,clientlist->client[i].estado);
+		if (i == 0)
+		{
+			sprintf(buffer,"%s-%s",clientlist->client[i].nombre,clientlist->client[i].estado);
+		}
+		else
+		{
+			sprintf(buffer,"%s%s-%s",buffer,clientlist->client[i].nombre,clientlist->client[i].estado);
+		}
 
 		// Si no estamos en el ultimo usuario, agregamos un separador
 		if (i < clientlist ->size -1)
@@ -86,16 +96,31 @@ void whoServer(ClientList* clientlist,int pipeId)
  * @Salida:  Imprime en pantalla
  */
 
-void writeToServer(Client* client,Client* clientToWrite, char* message)
+void writeToServer(ClientList* clientList,MessageList* messageList,char* arguments)
 
 {
-	/*
-	 * Defino un constructor para esta clase
-		#define INIT_MESSAGE(new,text,sender,reciever)
-		Message new = {.text = text, .sender =sender, .reciever = reciever}
-	 */
 
-	//INIT_MESSAGE(newMessage,message,client,clientToWrite);
+	// FORMATO DE arguments == 'Francisco|Pepe|Hola ¿como estas?'
+
+	char* message;
+	Client* client;
+	Client* clientToWrite;
+
+	// Obtenemos al cliente que envia el mensaje
+	client = searchClient(clientList, getWord(arguments,"|",0));
+
+	// Obtenemos al cliente que recibe el mensaje
+	clientToWrite = searchClient(clientList, getWord(arguments,"|",1));
+
+	// Obtenemos el mensaje a enviar
+	message = getWord(arguments,"|",2);
+
+
+	// Creamos el mensaje
+	INIT_MESSAGE(newMessage,message,client,clientToWrite);
+	// Agregamos el mensaje a la lista
+	addNewMessage(messageList, newMessage);
+
 }
 
 /* @Nombre: Estoy
@@ -110,13 +135,20 @@ void writeToServer(Client* client,Client* clientToWrite, char* message)
  * @Salida:  Imprime en pantalla
  */
 
-void statusServer(Client* client, char* estado)
+void statusServer(ClientList* clientList,char* arguments)
 
 {
 
-	// Recibo la data del buffer
+	// FORMATO DE arguments == 'Francisco|¡Estoy aburrido!'
 
+	Client* client;
+	char* status;
 
+	// Obtenemos al cliente que envia el mensaje
+	client = searchClient(clientList, getWord(arguments,"|",0));
+
+	// Obtenemos el mensaje a enviar
+	status = getWord(arguments,"|",1);
 
 	// Si ya existe un estado anterior libero la memoria
 
@@ -126,10 +158,11 @@ void statusServer(Client* client, char* estado)
 		free(client -> estado);
 	}
 	// Reservamos la memoria para el nuevo estado
-	client -> estado = (char *) malloc(strlen(estado));
+	client -> estado = (char *) malloc(strlen(status));
 
 	// Obtenemos el estado del cliente dado y lo actualizamos
-	strcpy(client -> estado, estado);
+	strcpy(client -> estado, status);
+	free(status);
 
 }
 
@@ -141,11 +174,19 @@ void statusServer(Client* client, char* estado)
  * @Salida:  Imprime en pantalla
  */
 
-void logOutServer(Client client)
+void logOutServer(ClientList* clientList,char* arguments)
 
 {
-	printf(LogOutMessage,"%s");
-	exit(0);
+	// FORMATO DE arguments == 'Francisco'
+
+	Client* client;
+	char* status;
+
+	// Obtenemos al cliente que envia el mensaje
+	client = searchClient(clientList, arguments);
+
+	removeClient(clientList, *client);
+	printf("User %s %s\n", arguments , LogOutServerMessage );
 }
 
 
@@ -170,12 +211,13 @@ int main() {
     printf("Probando whoServer! \n \n");
     int pruebaIterador;
     INIT_CLIENTLIST(listaPrueba);
-    INIT_CLIENT(cliente1,"Pepe");
-    INIT_CLIENT(cliente2,"Francisco");
 
     ClientList* clientListPointer = &listaPrueba;
-    addNewClient(clientListPointer, cliente1);
-    addNewClient(clientListPointer, cliente2);
+    addNewClient(clientListPointer,"Pepe",0,0);
+    addNewClient(clientListPointer, "Francisco",0,0);
+    statusServer(clientListPointer,"Francisco|¡Estoy aburrido!");
+    whoServer(&listaPrueba,0);
+    logOutServer(&listaPrueba, "Pepe");
     whoServer(&listaPrueba,0);
 
     // Probando whoServer

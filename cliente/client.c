@@ -136,8 +136,9 @@ void status(Client* client, char* estado)
 
 {
 	// creamos la orden necesaria para enviarla al servidor servidor
-	char* orderToSend = (char *) malloc(strlen(whoOrder) + strlen("-") + strlen(estado));
-	sprintf(orderToSend,"%s-%s",statusOrder,estado);
+	char* orderToSend = (char *) malloc(strlen(whoOrder) + strlen("|") + strlen(client->nombre)
+			+ strlen("|") + strlen(estado));
+	sprintf(orderToSend,"%s|%s|%s",statusOrder,client->nombre,estado);
 
 	// Enviar al servidor
 
@@ -145,6 +146,7 @@ void status(Client* client, char* estado)
 
 	// Recibir mensaje de comfirmacion
 
+	free(orderToSend);
 
 }
 
@@ -159,9 +161,11 @@ void status(Client* client, char* estado)
 void logOut(char* userName)
 
 {
-	// creamos la orden necesaria para enviarla al servidor servidor
-	char* orderToSend = (char *) malloc(strlen(logOutOrder) + strlen("-") + strlen(userName));
+	// Creamos la orden necesaria para enviarla al servidor servidor
+	char* orderToSend = (char *) malloc(strlen(logOutOrder) + strlen("|") + strlen(userName));
 	sprintf(orderToSend,"%s-%s",whoOrder,userName);
+
+	// Enviar al servidor
 
 	printf(LogOutMessage,"%s");
 
@@ -199,8 +203,8 @@ int main() {
 
 
     ClientList* clientListPointer = &listaPrueba;
-    addNewClient(clientListPointer, cliente1);
-    addNewClient(clientListPointer, cliente2);
+    addNewClient(clientListPointer,"Pepe",0,0);
+    addNewClient(clientListPointer, "Francisco",0,0);
 
     printf("Resultado De Funcion NewClient \n \n");
 

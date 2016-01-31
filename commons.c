@@ -24,6 +24,7 @@ const char *openError = "open Error";
 // Mensajes de sistema
 
 const char *LogOutMessage = "Logging out... Thank You For Using Our Chat Services!";
+const char *LogOutServerMessage = " has just logged out!";
 
 // Ordenes Cliente->Servidor
 
@@ -134,6 +135,25 @@ int open_fifo(const char *fifo_name) {
     return fifo;
 }
 
+
+// Busca a un cliente en particular
+Client* searchClient(ClientList* clientList, char* userName)
+{
+	int i;
+	Client* clientToSearch = NULL;
+
+	// Movemos los miembros del arreglo posteriores una casilla hacia atras
+	for(i = 0; i < clientList->size; i = i + 1)
+	{
+		if (strcmp(clientList->client[i].nombre,userName) == 0)
+		{
+			clientToSearch = &(clientList->client[i]);
+			return clientToSearch;
+		}
+	}
+	return clientToSearch;
+}
+
 // Compara 2 clientes
 
 int compareClients(Client client1, Client client2)
@@ -159,8 +179,18 @@ int compareClients(Client client1, Client client2)
 
 // Agrega un cliente nuevo al arreglo de clientes
 
-void addNewClient(ClientList* clientlist, Client client)
+void addNewClient(ClientList* clientlist,char* userName,int in_fd,int out_fd)
 {
+	INIT_CLIENT(client,userName);
+
+    // Reservamos la memoria para el nuevo estado
+	client.estado = (char *) malloc(strlen("Sin Estado"));
+
+	// Obtenemos el estado del cliente dado y lo actualizamos
+	strcpy(client.estado, "Sin Estado");
+
+	client.in_fd = in_fd;
+	client.out_fd = out_fd;
 	Client* clientPointer;
 
 	if (clientlist->size > 0)
@@ -220,3 +250,27 @@ void removeClient(ClientList* clientlist, Client client)
 	}
 }
 
+// Agrega un cliente nuevo al arreglo de clientes
+
+void addNewMessage(MessageList* messageList, Message message)
+{
+	Message* messagePointer;
+
+	if (messageList->size > 0)
+	{
+		// Agregamos un slot nuevo en la memoria
+		messagePointer = (Message *) realloc(messageList->message,(sizeof(Message) * (messageList->size + 1)));
+		messageList->message = messagePointer;
+	}
+	else
+	{
+		messagePointer = messageList->message;
+		// Agregamos un slot nuevo en la memoria
+		messageList->message = (Message *) malloc(sizeof(Message));
+	}
+
+	// Agregamos al nuevo usuario a la lista
+	messageList->message[messageList->size] = message;
+	messageList->size = messageList->size + 1;
+
+}

@@ -19,6 +19,7 @@ extern const char *selectError;
 extern const char *openError;
 
 extern const char *LogOutMessage;
+extern const char *LogOutServerMessage;
 extern const char *successMessage;
 
 // Ordenes Cliente->Servidor
@@ -43,7 +44,7 @@ typedef struct Client
 } Client;
 
 // Defino un constructor para esta clase
-#define INIT_CLIENT(new,name) Client new = {.nombre = name, .estado ="No Status", .friends = NULL, .in_fd = NULL, .out_fd =NULL}
+#define INIT_CLIENT(new,name) Client new = {.nombre = name, .estado =NULL, .friends = NULL, .in_fd = NULL, .out_fd =NULL}
 
 // Tipo estructurado para la lista de usuarios
 
@@ -71,7 +72,7 @@ typedef struct Message
 } Message;
 
 // Defino un constructor para esta clase
-#define INIT_MESSAGE(new,text,sender,reciever) Message new = {.text = text, .sender =sender, .reciever = reciever}
+#define INIT_MESSAGE(new,text,sender,reciever) Message new = {text,sender, reciever}
 
 typedef struct MessageList
 
@@ -86,11 +87,21 @@ typedef struct MessageList
 
 // FUNCIONES
 
-void addNewClient(ClientList* clientlist, Client client);
-void removeClient(ClientList* clientlist, Client client);
 char* getErrorMessage(const char* errorMessage,int line, char* file);
 char* getWord(char* string,char* delimeter,int index);
 int open_fifo(const char *fifo_name);
+
+// -- Client --
+
+Client* searchClient(ClientList* clientList,char* userName);
+int compareClients(Client client1, Client client2);
+void addNewClient(ClientList* clientlist,char* userName,int in_fd,int out_fd);
+void removeClient(ClientList* clientlist, Client client);
+
+// -- Message --
+
+void addNewMessage(MessageList* messageList, Message message);
+
 
 
 #endif /* COMMONS_H_ */
