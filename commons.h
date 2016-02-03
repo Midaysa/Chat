@@ -17,6 +17,8 @@
 extern const char *mkfifoError;
 extern const char *selectError;
 extern const char *openError;
+extern const char *argNumError;
+extern const char *argOrdError;
 
 extern const char *LogOutMessage;
 extern const char *LogOutServerMessage;
@@ -91,8 +93,8 @@ char* getErrorMessage(const char* errorMessage,int line, char* file);
 char* getWord(char* string,char* delimeter,int index);
 int open_fifo(const char *fifo_name);
 // Recibe una entrada de un pipe optimizando la memoria utilizada
-void recieveFromPipe(char *bufferToRecieve, int in_fd);
-void sendThroughPipe(char *bufferToSend, int out_fd);
+void recieveFromPipe(char *bufferToRecieve, char* in_file_name);
+void sendThroughPipe(char *bufferToSend, char* out_file_name);
 
 // -- Client --
 

@@ -191,7 +191,8 @@ void logOutServer(ClientList* clientList,char* arguments)
 
 
 
-int main() {
+int main(int argc, char **argv)
+{
     struct timeval tv;          // estructura para indicar el timeout de select
     int n;                      // 1 + file descriptor mas alto
     int rv;                     // return value del select, sirve para saber si
@@ -201,12 +202,30 @@ int main() {
                                 // al servidor y viceversa
     int fifo;
     fd_set fdset;               // crear set de pipes nominales
-    char in_file_name[11],      // nombre de los pipes de entrada
-         out_file_name[11];
+    char* in_file_name;     	// nombre de los pipes de entrada
+    char* out_file_name;		// nombre de los pipes de entrada
+
+	if (argc != 1 && argc != 3)
+	{
+		printf("%s", argNumError);
+	}
+
+	// Si recibo un argumento con el prefijo -p entonces asigno un nombre de pipe
+	if ((strcmp(argv[1],"-p")) == 0)
+	{
+		in_file_name = (char *) malloc(strlen(argv[2]));
+		strcpy(in_file_name,argv[2]);
+	}
+
+	// Si no recibo el argumento del pipe
+	else
+	{
+		printf("%s",argOrdError);
+	}
 
     printf("Iniciando servidor!\n");
 
-    fifo = open_fifo("servidor");
+    fifo = open_fifo(in_file_name);
     FD_ZERO(&fdset);            // limpiar el set de pipes nominales
 
     Client c1;
@@ -241,7 +260,7 @@ int main() {
                 sscanf(message, "%s %s", out_file_name, in_file_name);
                 printf("%s %s\n", in_file_name, out_file_name);
                 close(fifo);
-                fifo = open_fifo("servidor");
+                fifo = open_fifo(in_file_name);
 
                 char mensaje[] = "El servidor esta enviando datos...";
                 printf("%s -- %zd\n", mensaje, strlen(mensaje));

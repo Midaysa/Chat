@@ -20,6 +20,9 @@
 const char *mkfifoError = "mkfifo Error";
 const char *selectError = "select Error";
 const char *openError = "open Error";
+const char *argNumError = "Incorrect Number of arguments";
+const char *argOrdError = "Incorrect Order of arguments";
+
 
 // Mensajes de sistema
 
@@ -116,49 +119,58 @@ char* getWord(char* string,char* delimeter,int index)
 }
 
 // Recibe una entrada de un pipe optimizando la memoria utilizada
-void recieveFromPipe(char *bufferToRecieve, int in_fd)
+void recieveFromPipe(char *bufferToRecieve, char* in_file_name)
 {
 	// Enviamos la orden al servidor de los datos que necesitamos
 	char* buffer; //Variable en la que guardaremos los datos que vamos recibir del pipe
 	char* bufferLength; // Variable en la que guardaremos la longitud que recibiremos por el pipe
 	int length; // Variable en la que guardaremos el valor numerico de la longitud recibida
+	int in_fd;
 
+	in_fd = open(in_file_name, O_RDONLY);
 
 	// Recibimos la longitud de los datos que vamos recibir
 	bufferLength = malloc(11);
 	read(in_fd, bufferLength, 11);
+
+	close(in_fd);
 
 	// Convertimos la longitud recivida en enteros
 	length = atoi(bufferLength);
 	// Reservo el espacio necesario para el nuevo buffer
 	bufferToRecieve = (char *) malloc(length);
 
-
+	in_fd = open(in_file_name, O_RDONLY);
 
 	// Recibimos La lista de usuarios
 	read(in_fd, bufferToRecieve, length);
+	close(in_fd);
 	// Libero el espacio utilizado por la longitud ya que no se utilizara mas
 	free(bufferLength);
 
 }
 
 // Recibe una entrada de un pipe optimizando la memoria utilizada
-void sendThroughPipe(char *bufferToSend, int out_fd)
+void sendThroughPipe(char *bufferToSend, char* out_file_name)
 {
 	// Enviamos la orden al servidor de los datos que necesitamos
 	char* bufferLength; // Variable en la que guardaremos la longitud que recibiremos por el pipe
 	int length; // Variable en la que guardaremos el valor numerico de la longitud recibida
-
+	int out_fd;
 
 	// Calculamos la longitud del mensaje a enviar y lo enviamos
 	bufferLength = malloc(11);
 	length = strlen(bufferToSend);
 	sprintf(bufferLength,"%d",length);
+
+	out_fd = open(out_file_name, O_RDONLY);
 	write(out_fd, bufferLength, 11);
+	close(out_fd);
 
 	// Enviamos el mensaje
+	out_fd = open(out_file_name, O_RDONLY);
 	write(out_fd, bufferToSend, length);
-	printf(LogOutMessage,"%s");
+	close(out_fd);
 
 	// Liberamos la memoria utilizada para enviar la orden
 	free(bufferLength);
