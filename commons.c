@@ -116,31 +116,53 @@ char* getWord(char* string,char* delimeter,int index)
 }
 
 // Recibe una entrada de un pipe optimizando la memoria utilizada
-void recieveFromPipe(char *bufferToRecieve, int pipeId)
+void recieveFromPipe(char *bufferToRecieve, int in_fd)
 {
 	// Enviamos la orden al servidor de los datos que necesitamos
-
 	char* buffer; //Variable en la que guardaremos los datos que vamos recibir del pipe
-	int length;
+	char* bufferLength; // Variable en la que guardaremos la longitud que recibiremos por el pipe
+	int length; // Variable en la que guardaremos el valor numerico de la longitud recibida
 
-	// Recibimos la longitud de los datos que vamos recibir, y
-	// reservamos el espacio para recibir el archivo
 
-	// Aqui sustituimos esto de manera que nos llegue el tamano del buffer por un pipe
-	char* bufferLength = malloc(11);
-	strcpy(bufferToRecieve, "51");
+	// Recibimos la longitud de los datos que vamos recibir
+	bufferLength = malloc(11);
+	read(in_fd, bufferLength, 11);
 
+	// Convertimos la longitud recivida en enteros
 	length = atoi(bufferLength);
+	// Reservo el espacio necesario para el nuevo buffer
 	bufferToRecieve = (char *) malloc(length);
 
+
+
 	// Recibimos La lista de usuarios
-
-	// Datos de prueba, estos seran substituidos por los que envie el pipe
-	char* prueba_Lista = "Francisco - Estoy triste :( | Pepe - Estoy feliz =D";
-
-	strcpy(bufferToRecieve, prueba_Lista);
+	read(in_fd, bufferToRecieve, length);
+	// Libero el espacio utilizado por la longitud ya que no se utilizara mas
 	free(bufferLength);
 
+}
+
+// Recibe una entrada de un pipe optimizando la memoria utilizada
+void sendThroughPipe(char *bufferToSend, int out_fd)
+{
+	// Enviamos la orden al servidor de los datos que necesitamos
+	char* bufferLength; // Variable en la que guardaremos la longitud que recibiremos por el pipe
+	int length; // Variable en la que guardaremos el valor numerico de la longitud recibida
+
+
+	// Calculamos la longitud del mensaje a enviar y lo enviamos
+	bufferLength = malloc(11);
+	length = strlen(bufferToSend);
+	sprintf(bufferLength,"%d",length);
+	write(out_fd, bufferLength, 11);
+
+	// Enviamos el mensaje
+	write(out_fd, bufferToSend, length);
+	printf(LogOutMessage,"%s");
+
+	// Liberamos la memoria utilizada para enviar la orden
+	free(bufferLength);
+	free(bufferToSend);
 }
 
 // crea y abre el pipe nominal fifo_name

@@ -22,7 +22,7 @@
  * @Salida:  Imprime en pantalla
  */
 
-void who()
+void who(int in_fd,int out_fd)
 
 {
 	// creamos la orden necesaria para enviarla al servidor servidor
@@ -84,6 +84,7 @@ void who()
 
     }
 
+    write(out_fd, orderToSend, strlen(orderToSend));
     // Liberamos la memoria utilizada para enviar la orden
     free(orderToSend);
 
@@ -105,7 +106,7 @@ void who()
  * @Salida:  Imprime en pantalla
  */
 
-void writeTo(char* username,char* userNameToWrite,char* message)
+void writeTo(char* username,char* userNameToWrite,char* message,int out_fd)
 
 {
 	// creamos la orden necesaria para enviarla al servidor servidor
@@ -115,6 +116,8 @@ void writeTo(char* username,char* userNameToWrite,char* message)
 			+ strlen("|") + strlen(message));
 
 	sprintf(orderToSend,"%s-%s>%s|%s",writeToOrder,username,userNameToWrite,message);
+
+	write(out_fd, orderToSend, strlen(orderToSend));
 
 	// Liberamos la memoria utilizada para enviar la orden
 	free(orderToSend);
@@ -132,7 +135,7 @@ void writeTo(char* username,char* userNameToWrite,char* message)
  * @Salida:  Imprime en pantalla
  */
 
-void status(Client* client, char* estado)
+void status(Client* client, char* estado,int out_fd)
 
 {
 	// creamos la orden necesaria para enviarla al servidor servidor
@@ -141,8 +144,7 @@ void status(Client* client, char* estado)
 	sprintf(orderToSend,"%s|%s|%s",statusOrder,client->nombre,estado);
 
 	// Enviar al servidor
-
-
+	write(out_fd, orderToSend, strlen(orderToSend));
 
 	// Recibir mensaje de comfirmacion
 
@@ -158,7 +160,7 @@ void status(Client* client, char* estado)
  * @Salida:  Imprime en pantalla
  */
 
-void logOut(char* userName)
+void logOut(char* userName,int out_fd)
 
 {
 	// Creamos la orden necesaria para enviarla al servidor servidor
@@ -166,7 +168,7 @@ void logOut(char* userName)
 	sprintf(orderToSend,"%s-%s",whoOrder,userName);
 
 	// Enviar al servidor
-
+	write(out_fd, orderToSend, strlen(orderToSend));
 	printf(LogOutMessage,"%s");
 
 	// Liberamos la memoria utilizada para enviar la orden
@@ -188,10 +190,6 @@ int main() {
     char message[MSG_LEN];
     
     srand(time(NULL));                        // inicializa semilla del random
-
-    // Prueba Who
-
-    who();
 
     // Prueba con lista de clientes
 

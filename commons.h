@@ -44,7 +44,7 @@ typedef struct Client
 } Client;
 
 // Defino un constructor para esta clase
-#define INIT_CLIENT(new,name) Client new = {.nombre = name, .estado =NULL, .friends = NULL, .in_fd = NULL, .out_fd =NULL}
+#define INIT_CLIENT(new,name) Client new = {.nombre = name, .estado =NULL, .in_fd = 0, .out_fd =0}
 
 // Tipo estructurado para la lista de usuarios
 
@@ -90,6 +90,9 @@ typedef struct MessageList
 char* getErrorMessage(const char* errorMessage,int line, char* file);
 char* getWord(char* string,char* delimeter,int index);
 int open_fifo(const char *fifo_name);
+// Recibe una entrada de un pipe optimizando la memoria utilizada
+void recieveFromPipe(char *bufferToRecieve, int in_fd);
+void sendThroughPipe(char *bufferToSend, int out_fd);
 
 // -- Client --
 

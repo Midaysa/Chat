@@ -206,22 +206,6 @@ int main() {
 
     printf("Iniciando servidor!\n");
 
-    // Probando whoServer
-
-    printf("Probando whoServer! \n \n");
-    int pruebaIterador;
-    INIT_CLIENTLIST(listaPrueba);
-
-    ClientList* clientListPointer = &listaPrueba;
-    addNewClient(clientListPointer,"Pepe",0,0);
-    addNewClient(clientListPointer, "Francisco",0,0);
-    statusServer(clientListPointer,"Francisco|¡Estoy aburrido!");
-    whoServer(&listaPrueba,0);
-    logOutServer(&listaPrueba, "Pepe");
-    whoServer(&listaPrueba,0);
-
-    // Probando whoServer
-
     fifo = open_fifo("servidor");
     FD_ZERO(&fdset);            // limpiar el set de pipes nominales
 
@@ -260,7 +244,7 @@ int main() {
                 fifo = open_fifo("servidor");
 
                 char mensaje[] = "El servidor esta enviando datos...";
-                printf("%s -- %d\n", mensaje, strlen(mensaje));
+                printf("%s -- %zd\n", mensaje, strlen(mensaje));
                 c1.in_fd = open(in_file_name, O_RDONLY | O_NONBLOCK);
                 c1.out_fd = open(out_file_name, O_WRONLY | O_NONBLOCK);
                 write(c1.out_fd, mensaje, strlen(mensaje)+1);
