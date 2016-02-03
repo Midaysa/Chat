@@ -115,6 +115,34 @@ char* getWord(char* string,char* delimeter,int index)
 	return word;
 }
 
+// Recibe una entrada de un pipe optimizando la memoria utilizada
+void recieveFromPipe(char *bufferToRecieve, int pipeId)
+{
+	// Enviamos la orden al servidor de los datos que necesitamos
+
+	char* buffer; //Variable en la que guardaremos los datos que vamos recibir del pipe
+	int length;
+
+	// Recibimos la longitud de los datos que vamos recibir, y
+	// reservamos el espacio para recibir el archivo
+
+	// Aqui sustituimos esto de manera que nos llegue el tamano del buffer por un pipe
+	char* bufferLength = malloc(11);
+	strcpy(bufferToRecieve, "51");
+
+	length = atoi(bufferLength);
+	bufferToRecieve = (char *) malloc(length);
+
+	// Recibimos La lista de usuarios
+
+	// Datos de prueba, estos seran substituidos por los que envie el pipe
+	char* prueba_Lista = "Francisco - Estoy triste :( | Pepe - Estoy feliz =D";
+
+	strcpy(bufferToRecieve, prueba_Lista);
+	free(bufferLength);
+
+}
+
 // crea y abre el pipe nominal fifo_name
 // retorna el file descriptor del pipe creado
 int open_fifo(const char *fifo_name) {
