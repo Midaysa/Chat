@@ -191,41 +191,6 @@ int main() {
     
     srand(time(NULL));                        // inicializa semilla del random
 
-    // Prueba con lista de clientes
-
-    int pruebaIterador;
-    INIT_CLIENTLIST(listaPrueba);
-    INIT_CLIENT(cliente1,"Pepe");
-    INIT_CLIENT(cliente2,"Francisco");
-
-
-
-    ClientList* clientListPointer = &listaPrueba;
-    addNewClient(clientListPointer,"Pepe",0,0);
-    addNewClient(clientListPointer, "Francisco",0,0);
-
-    printf("Resultado De Funcion NewClient \n \n");
-
-    for (pruebaIterador = 0; pruebaIterador < listaPrueba.size; pruebaIterador = pruebaIterador + 1 )
-    {
-    	printf("listaPrueba[%d] = %s - %s\n",
-    			pruebaIterador,listaPrueba.client[pruebaIterador].nombre,
-				listaPrueba.client[pruebaIterador].estado);
-    }
-
-    removeClient(clientListPointer, cliente1);
-
-    printf("Resultado De Funcion removeClient \n \n");
-
-    for (pruebaIterador = 0; pruebaIterador < listaPrueba.size; pruebaIterador = pruebaIterador + 1 )
-    {
-    	printf("listaPrueba[%d] = %s - %s\n",
-    			pruebaIterador,listaPrueba.client[pruebaIterador].nombre,
-				listaPrueba.client[pruebaIterador].estado);
-    }
-
-    // Prueba con lista de clientes
-
     // abrir pipe publico de conexiones nuevas del servidor
     fifo = open("servidor", O_WRONLY);
     
@@ -262,9 +227,6 @@ int main() {
     close(in_fd);
     close(out_fd);
     printf("mensaje = %s.\n", mensaje);
-
-
-
 
     // nos aseguramos de que el SO ya escribio el mensaje en el pipe antes de cerrar la app
     sleep(1);
