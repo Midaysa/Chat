@@ -210,17 +210,28 @@ int main(int argc, char **argv)
 		printf("%s", argNumError);
 	}
 
-	// Si recibo un argumento con el prefijo -p entonces asigno un nombre de pipe
-	if ((strcmp(argv[1],"-p")) == 0)
+
+
+	if (argc == 3)
 	{
-		in_file_name = (char *) malloc(strlen(argv[2]));
-		strcpy(in_file_name,argv[2]);
+		// Si recibo un argumento con el prefijo -p entonces asigno un nombre de pipe
+		if ((strcmp(argv[1],"-p")) == 0)
+		{
+			in_file_name = (char *) malloc(strlen(argv[2]));
+			strcpy(in_file_name,argv[2]);
+		}
+
+		// Si no recibo el argumento del pipe
+		else
+		{
+			printf("%s",argOrdError);
+		}
 	}
 
-	// Si no recibo el argumento del pipe
-	else
+	else if (argc == 1)
 	{
-		printf("%s",argOrdError);
+		in_file_name = (char *) malloc(strlen("/tmp/servidor"));
+		strcpy(in_file_name,"/tmp/servidor");
 	}
 
     printf("Iniciando servidor!\n");
