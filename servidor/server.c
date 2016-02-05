@@ -205,33 +205,24 @@ int main(int argc, char **argv)
     char* in_file_name;     	// nombre de los pipes de entrada
     char* out_file_name;		// nombre de los pipes de entrada
 
-	if (argc != 1 && argc != 3)
+
+
+	if (argc == 2)
 	{
-		printf("%s", argNumError);
-	}
+		in_file_name = (char *) malloc(strlen(argv[1]));
+		strcpy(in_file_name,argv[1]);
 
-
-
-	if (argc == 3)
-	{
-		// Si recibo un argumento con el prefijo -p entonces asigno un nombre de pipe
-		if ((strcmp(argv[1],"-p")) == 0)
-		{
-			in_file_name = (char *) malloc(strlen(argv[2]));
-			strcpy(in_file_name,argv[2]);
-		}
-
-		// Si no recibo el argumento del pipe
-		else
-		{
-			printf("%s",argOrdError);
-		}
 	}
 
 	else if (argc == 1)
 	{
 		in_file_name = (char *) malloc(strlen("/tmp/servidor"));
 		strcpy(in_file_name,"/tmp/servidor");
+	}
+
+	else
+	{
+		printf("%s", argNumError);
 	}
 
     printf("Iniciando servidor!\n");

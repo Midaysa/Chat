@@ -182,8 +182,8 @@ int main(int argc, char **argv)
 {
 
     int len;
-    char* in_file_name, out_file_name; 		  // nombre de los pipes de entrada
-                                              // y salida de cada usuario
+    char* in_file_name; 		  // nombre de los pipes de entrada
+    char* out_file_name;                                // y salida de cada usuario
     int fifo;                                 // pipe "servidor para
                                               // solicitar una nueva conexion
     int in_fd, out_fd;                        // pipes de entrada/salida
@@ -191,67 +191,75 @@ int main(int argc, char **argv)
                                               // 1000000000 y 2000000000-1
     char message[MSG_LEN];
 
+	if (argc == 1)
+	{
+		in_file_name = (char *) malloc(strlen("System"));
+		strcpy(in_file_name,"System");
+		out_file_name = (char *) malloc(strlen("/tmp/servidor"));
+		strcpy(out_file_name,"/tmp/servidor");
+	}
+
+	else if (argc > 1 && argc <= 4)
+	{
+		// Si recibo un argumento con el prefijo -p entonces asigno un nombre de pipe
+			if ((strcmp(argv[1],"-p")) == 0)
+			{
+				out_file_name = (char *) malloc(strlen(argv[2]));
+				strcpy(out_file_name,argv[2]);
+
+				// Si recibo otro argumento entonces defino el nombre de usuario
+				if (argc == 4)
+				{
+					in_file_name = (char *) malloc(strlen(argv[3]));
+					strcpy(in_file_name,argv[3]);
+				}
+
+				// Si no recibo otro argumento entonces es el usuario del sistema
+				else
+				{
+					in_file_name = (char *) malloc(strlen("System"));
+					strcpy(in_file_name,"System");
+				}
+			}
+
+			// Si no recibo el argumento del pipe
+			else
+			{
+				// Si no defino nombre de servidor, escogo el nombre por defecto
+				out_file_name = (char *) malloc(strlen("/tmp/servidor"));
+				strcpy(out_file_name,"/tmp/servidor");
+
+				// Recibo un usuario
+				if (argc == 2)
+				{
+					in_file_name = (char *) malloc(strlen(argv[1]));
+					strcpy(in_file_name,argv[1]);
+				}
+
+				// No recibo ningun dato
+				else if (argc == 1)
+				{
+					in_file_name = (char *) malloc(strlen("System"));
+					strcpy(in_file_name,"System");
+				}
+
+				// Recibo argumentos pero en el orden incorrecto
+				else
+				{
+					printf(argOrdError);
+					exit(0);
+				}
+			}
+	}
+
     // Si recibo mas de 4 argumentos hay un error
-	if (argc > 4)
+	else
 	{
 		printf("%s", argNumError);
 		exit(0);
 	}
 
-	// Si recibo un argumento con el prefijo -p entonces asigno un nombre de pipe
-	if ((strcmp(argv[1],"-p")) == 0)
-	{
-		out_file_name = (char *) malloc(strlen(argv[2]));
-		strcpy(out_file_name,argv[2]);
 
-		// Si recibo otro argumento entonces defino el nombre de usuario
-		if (argc == 4)
-		{
-			in_file_name = (char *) malloc(strlen(argv[4]));
-			strcpy(in_file_name,argv[4]);
-		}
-
-		// Si no recibo otro argumento entonces es el usuario del sistema
-		else
-		{
-			in_file_name = (char *) malloc(strlen("System"));
-			strcpy(in_file_name,"System");
-		}
-	}
-
-	// Si no recibo el argumento del pipe
-	else
-	{
-		// Si no defino nombre de servidor, escogo el nombre por defecto
-		out_file_name = (char *) malloc(strlen("/tmp/servidor"));
-		strcpy(out_file_name,"/tmp/servidor");
-
-		// Recibo un usuario
-		if (argc == 2)
-		{
-			in_file_name = (char *) malloc(strlen(argv[2]));
-			strcpy(in_file_name,argv[2]);
-		}
-
-		// No recibo ningun dato
-		else if (argc == 1)
-		{
-			in_file_name = (char *) malloc(strlen("System"));
-			strcpy(in_file_name,"System");
-		}
-
-		// Recibo argumentos pero en el orden incorrecto
-		else
-		{
-			printf(argOrdError);
-			exit(0);
-		}
-	}
-
-
-
-
-    
     srand(time(NULL));                        // inicializa semilla del random
 
     // abrir pipe publico de conexiones nuevas del servidor
