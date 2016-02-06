@@ -118,6 +118,8 @@ char* getWord(char* string,char* delimeter,int index)
 	return word;
 }
 
+/*
+
 // Recibe una entrada de un pipe optimizando la memoria utilizada
 void recieveFromPipe(char *bufferToRecieve, char* in_file_name)
 {
@@ -135,10 +137,10 @@ void recieveFromPipe(char *bufferToRecieve, char* in_file_name)
 
 	close(in_fd);
 
-	// Convertimos la longitud recivida en enteros
+	// Convertimos la longitud recibida en enteros  
 	length = atoi(bufferLength);
 	// Reservo el espacio necesario para el nuevo buffer
-	bufferToRecieve = (char *) malloc(length);
+	bufferToRecieve = (char *) malloc(length);		// error ortografico
 
 	in_fd = open(in_file_name, O_RDONLY);
 
@@ -159,12 +161,12 @@ void sendThroughPipe(char *bufferToSend, char* out_file_name)
 	int out_fd;
 
 	// Calculamos la longitud del mensaje a enviar y lo enviamos
-	bufferLength = malloc(11);
+	bufferLength = malloc(11);		
 	length = strlen(bufferToSend);
-	sprintf(bufferLength,"%d",length);
+	sprintf(bufferLength,"%d",length);  // esto no tiene sentido 
 
 	out_fd = open(out_file_name, O_RDONLY);
-	write(out_fd, bufferLength, 11);
+	write(out_fd, bufferLength, 11); 
 	close(out_fd);
 
 	// Enviamos el mensaje
@@ -174,8 +176,33 @@ void sendThroughPipe(char *bufferToSend, char* out_file_name)
 
 	// Liberamos la memoria utilizada para enviar la orden
 	free(bufferLength);
-	free(bufferToSend);
+	free(bufferToSend);		// esto de aca es peligroso
 }
+
+*/
+
+
+
+// ********** Probamos funcion para comunicarse por medio de pipes
+void recieveFromPipe(char *bufferToRecieve, char* in_file_name) {
+	int fifo, len;
+	
+	len = strlen(in_file_name);
+	fifo = open(in_file_name,  O_RDONLY | O_NONBLOCK);
+	write(fifo, bufferToRecieve, len);
+}
+
+void sendThroughPipe(char *bufferToSend, char* out_file_name) {
+	int fifo, len;
+	
+	len = strlen(out_file_name);
+	fifo = open(out_file_name, O_WRONLY | O_NONBLOCK);
+	write(fifo, bufferToSend, len);
+}
+
+
+
+
 
 // crea y abre el pipe nominal fifo_name
 // retorna el file descriptor del pipe creado

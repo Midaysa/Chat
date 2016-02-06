@@ -40,7 +40,7 @@ typedef struct Client
 {
 	char* nombre;
 	char* estado;
-	int friends[100];
+	int friends[N];
     int in_fd, out_fd;
 
 } Client;
