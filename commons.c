@@ -190,6 +190,7 @@ void recieveFromPipe(char *bufferToRecieve, char* in_file_name) {
 	len = strlen(in_file_name);
 	fifo = open(in_file_name,  O_RDONLY | O_NONBLOCK);
 	write(fifo, bufferToRecieve, len);
+	close(fifo);
 }
 
 void sendThroughPipe(char *bufferToSend, char* out_file_name) {
@@ -198,6 +199,7 @@ void sendThroughPipe(char *bufferToSend, char* out_file_name) {
 	len = strlen(out_file_name);
 	fifo = open(out_file_name, O_WRONLY | O_NONBLOCK);
 	write(fifo, bufferToSend, len);
+	close(fifo);
 }
 
 
