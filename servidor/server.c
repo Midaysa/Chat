@@ -228,7 +228,7 @@ int main(int argc, char **argv)
     printf("Iniciando servidor!\n");
 
     fifo = open_fifo(in_file_name);
-    FD_ZERO(&fdset);            // limpiar el set de pipes nominales
+    FD_ZERO(&fdset);                     // limpiar el set de pipes nominales
 
     Client c1;
 
