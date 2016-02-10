@@ -187,16 +187,17 @@ void sendThroughPipe(char *bufferToSend, char* out_file_name)
 void recieveFromPipe(char *bufferToRecieve, char* in_file_name) {
 	int fifo, len;
 	
-	len = strlen(in_file_name);
+	len = strlen(bufferToRecieve);
 	fifo = open(in_file_name,  O_RDONLY | O_NONBLOCK);
 	write(fifo, bufferToRecieve, len);
 	close(fifo);
 }
 
-void sendThroughPipe(char *bufferToSend, char* out_file_name) {
+void sendThroughPipe(char *bufferToSend, char* out_file_name)
+{
 	int fifo, len;
 	
-	len = strlen(out_file_name);
+	len = strlen(bufferToSend);
 	fifo = open(out_file_name, O_WRONLY | O_NONBLOCK);
 	write(fifo, bufferToSend, len);
 	close(fifo);
@@ -364,4 +365,38 @@ void addNewMessage(MessageList* messageList, Message message)
 	messageList->message[messageList->size] = message;
 	messageList->size = messageList->size + 1;
 
+}
+
+void obtainOption(char** finalString,char* const userName)
+{
+	char c;
+	char * stringToSafeBuffer;
+	char * stringToSafeBufferCopy;
+	int i=0,j=1;
+	stringToSafeBuffer = (char*)malloc(sizeof(char));
+	printf("%s : ",userName);
+	while(c!='\n')
+	{
+		c = getc(stdin);     //read the input from keyboard standard input
+
+		if(c=='\n')
+		{
+			break;
+		}
+		else
+		{
+			//re-allocate (resize) memory for character read to be stored
+			stringToSafeBufferCopy = (char*)realloc(stringToSafeBuffer,j*sizeof(char));
+			stringToSafeBuffer = stringToSafeBufferCopy;
+			stringToSafeBuffer[i] = c;  //store read character by making pointer point to c
+		}
+
+		i++;
+		j++;
+
+	}
+
+	*finalString= (char*)malloc(strlen(stringToSafeBuffer) + 1);
+	strcpy(*finalString,stringToSafeBuffer);
+	free(stringToSafeBufferCopy);
 }

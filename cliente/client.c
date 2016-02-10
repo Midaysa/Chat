@@ -21,8 +21,7 @@
  * @Entrada: Ninguna
  * @Salida:  Imprime en pantalla
  */
-
-void who(int in_fd,int out_fd)
+void who(char* out_file_name)
 
 {
 	// creamos la orden necesaria para enviarla al servidor servidor
@@ -259,6 +258,49 @@ int main(int argc, char **argv)
 		exit(0);
 	}
 
+	char * option;
+
+
+
+	char c;
+	char * stringToSafeBuffer;
+	char * optionCopy;
+	char * order;
+	int i,j;
+
+	while(1)
+	{
+		option = NULL;
+		obtainOption(&option,in_file_name);
+		optionCopy = option;
+
+	   /* get the first token */
+		order = strtok(option, " ");
+
+		if (strcmp(order,"-quien") == 0)
+		{
+			who(out_file_name);
+		}
+		else if (strcmp(order,"-escribir") == 0)
+		{
+
+		}
+		else if (strcmp(order,"-esto") == 0)
+		{
+
+		}
+		else if (strcmp(order,"-salir") == 0)
+		{
+
+		}
+		else
+		{
+			printf("Entrada Invalida, vuelva a intentarlo \n");
+		}
+
+		free(optionCopy);
+
+	}
 
     srand(time(NULL));                        // inicializa semilla del random
 
@@ -266,17 +308,6 @@ int main(int argc, char **argv)
     fifo = open(out_file_name, O_WRONLY);
     
     if (fifo == -1) perror(getErrorMessage(openError,__LINE__,__FILE__));
-
-    // convierte r a char y lo almacena en in_file_name
-    r = rand() % 1000000000 + 1000000000;
-    sprintf(in_file_name, "%d", r);
-
-    r = rand() % 1000000000 + 1000000000;
-    sprintf(out_file_name, "%d", r);
-    printf("%s %s\n", in_file_name, out_file_name);
-
-    // message = in_file_name + ' ' + out_file_name
-    sprintf(message, "%s %s\n", in_file_name, out_file_name);
 
     // crear pipe (nominal) de entrada
     mkfifo(in_file_name, BASIC_PERMISSIONS, O_NONBLOCK);
@@ -298,6 +329,15 @@ int main(int argc, char **argv)
     close(in_fd);
     close(out_fd);
     printf("mensaje = %s.\n", mensaje);
+
+
+
+
+//    while (1)
+//    {
+//
+//
+//    }
 
     // nos aseguramos de que el SO ya escribio el mensaje en el pipe antes de cerrar la app
     sleep(1);

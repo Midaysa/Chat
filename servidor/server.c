@@ -248,7 +248,8 @@ int main(int argc, char **argv)
 
         rv = select(n, &fdset, NULL, NULL, &tv);
 
-        if (rv == -1) {                 // error chequeando pipes
+        if (rv == -1)
+        {   // error chequeando pipes
             perror((getErrorMessage(selectError,__LINE__,__FILE__)));
         }
         else if (rv > 0) {              // existen archivos con datos para leer
