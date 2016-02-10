@@ -83,7 +83,6 @@ void who(char* out_file_name)
 
     }
 
-    write(out_fd, orderToSend, strlen(orderToSend));
     // Liberamos la memoria utilizada para enviar la orden
     free(orderToSend);
 
@@ -245,7 +244,7 @@ int main(int argc, char **argv)
 				// Recibo argumentos pero en el orden incorrecto
 				else
 				{
-					printf(argOrdError);
+					printf("%s \n",argOrdError);
 					exit(0);
 				}
 			}
