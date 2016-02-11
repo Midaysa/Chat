@@ -5,12 +5,37 @@
 #include <stdlib.h>             // malloc, free
 #include <stdbool.h>            // bool, true, false
 #include <string.h>             // strlen
+#include <ncurses.h>
 #include "../commons.h"         // error messages
 
 
 #define BASIC_PERMISSIONS 0666
 #define MSG_LEN 500
+#define ALTO 5 // Alto de la ventana 2
+#define LINES_MIN 10 // Alto m�nimo que debe tener el terminal
+#define COLS_MIN 25 // Ancho m�nimo que debe tener el terminal
+#define TECLA_RETURN 0xD
+#define TAM 2048 // Tama�o de buffer
 
+WINDOW *ventana1, *ventana2;
+
+/* Mueve el cursor al punto de inserci�n actual de la ventana 2. */
+void enfocarVentana2() {
+    int y, x;
+    getyx(ventana2, y, x);
+    wmove(ventana2, y, x);
+    wrefresh(ventana2);
+}
+
+/* Borra el contenido de la ventana 2 y ubica el cursor en la esquina
+ * superior izquierda de esta ventana.
+ */
+void limpiarVentana2() {
+    wclear(ventana2);
+    mvwhline(ventana2, 0, 0, 0, 20); // Dibujar la l�nea horizontal
+    wmove(ventana2, 1, 0);
+    wrefresh(ventana2);
+}
 
 /* @Nombre: Quien
  * @Funcion: Esta orden muestra una lista de los usuarios conectados al
@@ -158,11 +183,16 @@ void status(Client* client, char* estado,int out_fd)
  * @Salida:  Imprime en pantalla
  */
 
-void logOut(char* userName,int out_fd)
+void logOut(char* userName,char* serverName)
 
 {
+
 	// Creamos la orden necesaria para enviarla al servidor servidor
-	char* orderToSend = (char *) malloc(strlen(logOutOrder) + strlen("|") + strlen(userName));
+	char* orderToSend;
+	int out_fd;
+	orderToSend = (char *) malloc(strlen(logOutOrder) + strlen("|") + strlen(userName));
+	out_fd = open(serverName, O_WRONLY);
+
 	sprintf(orderToSend,"%s-%s",whoOrder,userName);
 
 	// Enviar al servidor
@@ -170,6 +200,7 @@ void logOut(char* userName,int out_fd)
 	printf(LogOutMessage,"%s");
 
 	// Liberamos la memoria utilizada para enviar la orden
+	close(out_fd);
 	free(orderToSend);
 	exit(0);
 }
@@ -257,24 +288,59 @@ int main(int argc, char **argv)
 		exit(0);
 	}
 
+    initscr(); // Inicializar la biblioteca ncurses
+
+    if (LINES < LINES_MIN || COLS < COLS_MIN) {
+        endwin(); // Restaurar la operaci�n del terminal a modo normal
+        printf("El terminal es muy peque�o para correr este programa.\n");
+        exit(0);
+    }
+
+    // Opciones de la biblioteca ncurses
+    cbreak();
+    nonl();
+
+    int alto1 = LINES - ALTO; // Alto de la ventana 1
+    ventana1 = newwin(alto1, 0, 0, 0); // Crear la ventana 1
+    ventana2 = newwin(ALTO, 0, alto1, 0); // Crear la ventana 2
+    scrollok(ventana1, TRUE); //Activar el corrimiento autom�tico en la ventana 1
+    scrollok(ventana2, TRUE);
+    limpiarVentana2(); // Dibujar la l�nea horizontal
+
 	char * option;
 
 
 
 	char c;
-	char * stringToSafeBuffer;
-	char * optionCopy;
 	char * order;
+	char * userToWrite = NULL;
 	int i,j;
+
+	wprintw(ventana1, "Mega Servicio De Chat! Bienvenido! \n \n");
 
 	while(1)
 	{
-		option = NULL;
-		obtainOption(&option,in_file_name);
-		optionCopy = option;
+        char buffer[TAM];
+        wgetnstr(ventana2, buffer, TAM); // Leer una l�nea de la entrada
+
+//		option = NULL;
+//		obtainOption(&option,in_file_name);
+//		optionCopy = option;
 
 	   /* get the first token */
-		order = strtok(option, " ");
+		order = getWord(buffer," ",0);
+
+
+		// Si No Se ha definido el usuario al escribir
+		if (userToWrite == NULL)
+		{
+			wprintw(ventana1, "%s: %s\n", in_file_name,buffer);
+		}
+		// Si Se ha definido el usuario al escribir
+		else
+		{
+			wprintw(ventana1, "%s -> %s: %s\n", userToWrite,userToWrite,buffer);
+		}
 
 		if (strcmp(order,"-quien") == 0)
 		{
@@ -282,22 +348,25 @@ int main(int argc, char **argv)
 		}
 		else if (strcmp(order,"-escribir") == 0)
 		{
-
+			userToWrite = (char *) malloc(strlen(getWord(buffer," ",1) + 1));
+			strcpy(userToWrite, getWord(buffer," ",1));
 		}
-		else if (strcmp(order,"-esto") == 0)
+		else if (strcmp(order,"-estoy") == 0)
 		{
 
 		}
 		else if (strcmp(order,"-salir") == 0)
 		{
-
+			logOut(in_file_name,out_file_name);
 		}
 		else
 		{
 			printf("Entrada Invalida, vuelva a intentarlo \n");
 		}
 
-		free(optionCopy);
+        wrefresh(ventana1);
+        limpiarVentana2();
+//		free(optionCopy);
 
 	}
 
