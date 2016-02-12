@@ -6,16 +6,24 @@
 #include <stdbool.h>            // bool, true, false
 #include <string.h>             // strlen
 #include <signal.h>             // kill, SIGINT
+#include <ncurses.h>
+#include "../commons.h"         // error messages
 
 #define BASIC_PERMISSIONS 0666
 #define MSG_LEN 500             // NOTA: VER EN CUANTO SE DEJARA ESTE ARREGLO
 #define NAME_LEN 50
 
+#define ALTO 5 // Alto de la ventana 2
+#define LINES_MIN 10 // Alto m�nimo que debe tener el terminal
+#define COLS_MIN 25 // Ancho m�nimo que debe tener el terminal
+#define TECLA_RETURN 0xD
+#define TAM 2048 // Tama�o de buffer
 
-void ChildProcess(char[]);
-void ParentProcess(char[]);
+WINDOW *ventana1, *ventana2;
+
+void enfocarVentana2();
+void limpiarVentana2();
 void write_full(char *token, char dst[]);
-char split_first(char[], char[], char[]);
 
 /* Hay que permitir que se le pasen argumentos al cliente */
 
@@ -29,20 +37,90 @@ int main(int argc, char *argv[]) {
     int in_fd, out_fd;                         // pipes de entrada/salida
     int r;                                     // numero random entre
                                                // 1000000000 y 2000000000-1
-    char message[MSG_LEN];
     char server_pipe_name[NAME_LEN];
     char username[NAME_LEN];
+    char command[MSG_LEN], first[MSG_LEN], second[MSG_LEN], message[MSG_LEN],
+             dest[NAME_LEN], *token;
 
     srand(time(NULL));                         // inicializa semilla del random
 
-    if (argc == 2) {
-        strcpy(server_pipe_name, "/tmp/servidor");
-        strcpy(username, argv[1]);
-    }
-    else {
-        strcpy(server_pipe_name, argv[2]);
-        strcpy(username, argv[3]);
-    }
+
+	if (argc == 1)
+	{
+//		in_file_name = (char *) malloc(strlen("System"));
+//		strcpy(in_file_name,"System");
+//		out_file_name = (char *) malloc(strlen("/tmp/servidor"));
+//		strcpy(out_file_name,"/tmp/servidor");
+		strcpy(username, "System");
+		strcpy(server_pipe_name, "/tmp/servidor");
+	}
+
+	else if (argc > 1 && argc <= 4)
+	{
+		// Si recibo un argumento con el prefijo -p entonces asigno un nombre de pipe
+			if ((strcmp(argv[1],"-p")) == 0)
+			{
+//				out_file_name = (char *) malloc(strlen(argv[2]));
+//				strcpy(out_file_name,argv[2]);
+				strcpy(server_pipe_name, argv[2]);
+
+				// Si recibo otro argumento entonces defino el nombre de usuario
+				if (argc == 4)
+				{
+//					in_file_name = (char *) malloc(strlen(argv[3]));
+//					strcpy(in_file_name,argv[3]);
+					strcpy(username, argv[3]);
+				}
+
+				// Si no recibo otro argumento entonces es el usuario del sistema
+				else
+				{
+					//	in_file_name = (char *) malloc(strlen("System"));
+					//	strcpy(in_file_name,"System");
+						strcpy(username, "System");
+				}
+			}
+
+			// Si no recibo el argumento del pipe
+			else
+			{
+				// Si no defino nombre de servidor, escogo el nombre por defecto
+//				out_file_name = (char *) malloc(strlen("/tmp/servidor"));
+//				strcpy(out_file_name,"/tmp/servidor");
+				strcpy(server_pipe_name, "/tmp/servidor");
+
+				// Recibo un usuario
+				if (argc == 2)
+				{
+//					in_file_name = (char *) malloc(strlen(argv[1]));
+//					strcpy(in_file_name,argv[1]);
+			        strcpy(username, argv[1]);
+				}
+
+				// No recibo ningun dato
+				else if (argc == 1)
+				{
+//					in_file_name = (char *) malloc(strlen("System"));
+//					strcpy(in_file_name,"System");
+			        strcpy(username, "System");
+				}
+
+				// Recibo argumentos pero en el orden incorrecto
+				else
+				{
+					printf("%s \n",argOrdError);
+					exit(0);
+				}
+			}
+	}
+
+    // Si recibo mas de 4 argumentos hay un error
+	else
+	{
+		printf("%s", argNumError);
+		exit(0);
+	}
+
 
     //printf("%s %s\n", server_pipe_name, username);
     /*int i;
@@ -87,72 +165,35 @@ int main(int argc, char *argv[]) {
     pid_t pid;
     pid = fork();
 
-    if (pid == 0)
-        ChildProcess(in_file_name);
-    else
-        ParentProcess(out_file_name);
-    while(true) {
-        printf("warning: stalling..!");
-        break;
+    initscr(); // Inicializar la biblioteca ncurses
+
+    if (LINES < LINES_MIN || COLS < COLS_MIN)
+    {
+        endwin(); // Restaurar la operaci�n del terminal a modo normal
+        printf("El terminal es muy peque�o para correr este programa.\n");
+        exit(0);
     }
-}
 
-// Maneja la salida de los mensajes
-void ParentProcess(char out_file_name[]) {
-    int out_fd;
-    bool is_writing = false;
-    char command[MSG_LEN], first[MSG_LEN], second[MSG_LEN], message[MSG_LEN],
-         dest[NAME_LEN], *token;
+    // Opciones de la biblioteca ncurses
+    cbreak();
+    nonl();
 
-    while(true) {
-        out_fd = open(out_file_name, O_WRONLY);  // abrir el pipe para enviar datos
+    int alto1 = LINES - ALTO; // Alto de la ventana 1
+    ventana1 = newwin(alto1, 0, 0, 0); // Crear la ventana 1
+    ventana2 = newwin(ALTO, 0, alto1, 0); // Crear la ventana 2
+    scrollok(ventana1, TRUE); //Activar el corrimiento autom�tico en la ventana 1
+    scrollok(ventana2, TRUE);
+    limpiarVentana2(); // Dibujar la l�nea horizontal
 
-        fgets(command, MSG_LEN, stdin);          // leer comando del usuario
-        command[strlen(command)-1] = 0;          // sustituir \n por \0 al final
-        token = strtok(command, " ");      // token = primera palabra del comando
-        printf("command = |%s| token = |%s|\n", command, token);
+	char * order;
+	char * userToWrite = NULL;
 
-        if (strcmp(token, "-estoy") == 0) {
-            is_writing = false;
-            write_full(token, command);
-            printf("command = |%s|\n", command);
-            write(out_fd, command, MSG_LEN);
-            // mostrar en algun label de la GUI este estado
-        }
-        else if (strcmp(token, "-quien") == 0) {
-            is_writing = false;
-            write(out_fd, command, MSG_LEN);
-        }
-        else if (strcmp(token, "-escribir") == 0) {
-            is_writing = true;
+	wprintw(ventana1, "Mega Servicio De Chat! Bienvenido! \n \n");
 
-            // extraer destinatario y pegarlo en dest
-            token = strtok(NULL, " ");
-            strcpy(dest, token);
-        }
-        else if (strcmp(token, "-salir") == 0) {
-            is_writing = false;
-            write(out_fd, command, MSG_LEN);
-            sleep(1);
-            break;
-        }
-        else if (is_writing){
-            write(out_fd, command, MSG_LEN);
-        }
-        close(out_fd);
-    }
-    close(out_fd);
-    sleep(5);
-    unlink(out_file_name);
-    printf("ParentProcess exiting\n");
-    exit(0);
-}
+	while(true)
+	{
+        char buffer[TAM];
 
-void ChildProcess(char in_file_name[]) {
-    char message[MSG_LEN];
-    int in_fd, len;
-
-    while(true) {
         in_fd = open(in_file_name, O_RDONLY);      // abrir el pipe para leer datos
         strcpy(message, "");
         read(in_fd, message, MSG_LEN);
@@ -163,13 +204,78 @@ void ChildProcess(char in_file_name[]) {
             break;
         }
         sleep(1);
-    }
+
+        out_fd = open(out_file_name, O_WRONLY);  // abrir el pipe para enviar datos
+        wgetnstr(ventana2, command, MSG_LEN); // Leer una l�nea de la entrada
+        command[strlen(command)-1] = 0;          // sustituir \n por \0 al final
+        token = strtok(command, " ");      // token = primera palabra del comando
+        printf("command = |%s| token = |%s|\n", command, token);
+
+		// Si No Se ha definido el usuario al escribir
+		if (userToWrite == NULL)
+		{
+			wprintw(ventana1, "%s: %s\n", in_file_name,buffer);
+		}
+		// Si Se ha definido el usuario al escribir
+		else
+		{
+			wprintw(ventana1, "%s -> %s: %s\n", username,dest,buffer);
+		}
+
+		//
+
+		if (token[0] == '-')
+		{
+			if (strcmp(token, "-estoy") == 0) {
+				write_full(token, command);
+				printf("command = |%s|\n", command);
+				write(out_fd, command, MSG_LEN);
+				// mostrar en algun label de la GUI este estado
+			}
+			else if (strcmp(token, "-quien") == 0) {
+				write(out_fd, command, MSG_LEN);
+			}
+			else if (strcmp(token, "-escribir") == 0) {
+
+				// extraer destinatario y pegarlo en dest
+				token = strtok(NULL, " ");
+				strcpy(dest, token);
+			}
+			else if (strcmp(token, "-salir") == 0) {
+				write(out_fd, command, MSG_LEN);
+				sleep(1);
+			    endwin(); // Restaurar la operaci�n del terminal a modo normal
+			    exit(0);
+			}
+	        else
+	        {
+	        	wprintw(ventana1, "Orden Invalida");
+	        }
+		}
+        else
+        {
+            write(out_fd, command, MSG_LEN);
+        }
+        close(out_fd);
+
+        wrefresh(ventana1);
+        limpiarVentana2();
+
+	}
+
+    close(out_fd);
+    sleep(5);
+    unlink(out_file_name);
+    printf("ParentProcess exiting\n");
 
     printf("ChildProcess exiting\n");
     close(in_fd);
     unlink(in_file_name);
+
     exit(0);
 }
+
+
 
 void write_full(char *token, char dst[]) {
     char tmp[MSG_LEN];
@@ -182,4 +288,22 @@ void write_full(char *token, char dst[]) {
 
     strcpy(dst, tmp);
     dst[strlen(dst)-1] = 0;
+}
+
+/* Mueve el cursor al punto de inserci�n actual de la ventana 2. */
+void enfocarVentana2() {
+    int y, x;
+    getyx(ventana2, y, x);
+    wmove(ventana2, y, x);
+    wrefresh(ventana2);
+}
+
+/* Borra el contenido de la ventana 2 y ubica el cursor en la esquina
+ * superior izquierda de esta ventana.
+ */
+void limpiarVentana2() {
+    wclear(ventana2);
+    mvwhline(ventana2, 0, 0, 0, 20); // Dibujar la l�nea horizontal
+    wmove(ventana2, 1, 0);
+    wrefresh(ventana2);
 }

@@ -140,7 +140,8 @@ int main(int argc, char *argv[]) {
                         strcpy(message, "");
 
                         for (j=0; j<N; j++) {
-                            if (strlen(clients[j].username) > 0) {
+                            if (strlen(clients[j].username) > 0)
+                            {
                                 strcat(message, clients[j].username);
                                 strcat(message, ":");
                                 strcat(message, clients[j].status);

@@ -1,5 +1,5 @@
 chat: chat.o
-	gcc chat.o -o chat -lncurses
+	gcc chat.o -o -lncurses chat 
 
 chat.o: chat.c chat.h
 	gcc -c -g chat.c
