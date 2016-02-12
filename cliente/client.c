@@ -126,7 +126,6 @@ void ParentProcess(char out_file_name[]) {
         }
         else if (strcmp(token, "-escribir") == 0) {
             is_writing = true;
-
             // extraer destinatario y pegarlo en dest
             token = strtok(NULL, " ");
             strcpy(dest, token);
@@ -138,7 +137,10 @@ void ParentProcess(char out_file_name[]) {
             break;
         }
         else if (is_writing){
-            write(out_fd, command, MSG_LEN);
+            sprintf(message, "-escribir %s ", dest);
+            write_full(token, command);
+            strcat(message, command);
+            write(out_fd, message, MSG_LEN);
         }
         close(out_fd);
     }
@@ -176,7 +178,7 @@ void write_full(char *token, char dst[]) {
     char tmp[MSG_LEN] = "";
 
     while (token != NULL) {
-        printf("write_full :: %s\n", token);
+        //printf("write_full :: %s\n", token);
         strcat(tmp, token);
         strcat(tmp, " ");
         token = strtok(NULL, " ");

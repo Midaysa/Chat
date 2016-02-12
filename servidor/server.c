@@ -56,6 +56,7 @@ int main(int argc, char *argv[]) {
                                 // si hubo error (-1) o si hubo timeout (0)
     char message[MSG_LEN];      // string de datos enviados desde los clientes
                                 // al servidor y viceversa
+    char tmp[MSG_LEN];          // string temporal para agregar origen de mensaje
     int fifo;                   // fd del pipe del servidor
     fd_set fdset;               // crear set de pipes nominales
     char in_file_name[11],     	// nombre de los pipes de entrada
@@ -151,10 +152,17 @@ int main(int argc, char *argv[]) {
                         write(clients[i].out_fd, message, MSG_LEN);
                     }
                     else if (strcmp(token, "-escribir") == 0) {
-                        break;
+                        token = strtok(NULL, " ");
+                        strcpy(username, token);
+                        token = strtok(NULL, " ");
+                        write_full(token, message);
+                        sprintf(tmp, "mensaje de %s: %s", clients[i].username, message);
+                        sendMessage(username, tmp);
                     }
                     else if (strcmp(token, "-salir") == 0) {
                         printf("logging out\n");
+                        strcpy(message, "-salir");
+                        write(clients[i].out_fd, message, MSG_LEN);
                         logout(clients[i].username);
                         continue;
                     }
@@ -222,8 +230,7 @@ void sendMessage(char username[], char message[]) {
 
 // escribe lo que le sobra a token dentro de dst
 void write_full(char *token, char dst[]) {
-    char tmp[MSG_LEN];
-    strcpy(tmp, "");
+    char tmp[MSG_LEN] = "";
 
     while (token != NULL) {
         strcat(tmp, token);
