@@ -121,6 +121,7 @@ int main(int argc, char *argv[]) {
             for (i=0; i<N; i++) {
                 if (FD_ISSET(clients[i].in_fd, &fdset)) {
                     printf("comando recibido de |%s|\n", clients[i].username);
+                    strcpy(message, "");
                     read(clients[i].in_fd, message, MSG_LEN);
                     printf("message = |%s|\n", message);
                     token = strtok(message, " ");      // token = primera palabra del comando

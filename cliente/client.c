@@ -106,9 +106,10 @@ void ParentProcess(char out_file_name[]) {
 
     while(true) {
         out_fd = open(out_file_name, O_WRONLY);  // abrir el pipe para enviar datos
-
-        fgets(command, MSG_LEN, stdin);          // leer comando del usuario
-        command[strlen(command)-1] = 0;          // sustituir \n por \0 al final
+        strcpy(command, "");
+        token = NULL;
+        fgets(command, MSG_LEN, stdin);    // leer comando del usuario
+        command[strlen(command)-1] = 0;    // sustituir \n por \0 al final
         token = strtok(command, " ");      // token = primera palabra del comando
         printf("command = |%s| token = |%s|\n", command, token);
 
@@ -172,14 +173,14 @@ void ChildProcess(char in_file_name[]) {
 }
 
 void write_full(char *token, char dst[]) {
-    char tmp[MSG_LEN];
+    char tmp[MSG_LEN] = "";
 
     while (token != NULL) {
+        printf("write_full :: %s\n", token);
         strcat(tmp, token);
         strcat(tmp, " ");
         token = strtok(NULL, " ");
     }
-
     strcpy(dst, tmp);
     dst[strlen(dst)-1] = 0;
 }
