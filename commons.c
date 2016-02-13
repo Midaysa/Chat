@@ -28,6 +28,7 @@ const char *argOrdError = "Incorrect Order of arguments";
 
 const char *LogOutMessage = "Logging out... Thank You For Using Our Chat Services!";
 const char *LogOutServerMessage = " has just logged out!";
+const char *defaultStatus = "No Status";
 
 // Ordenes Cliente->Servidor
 
@@ -118,70 +119,6 @@ char* getWord(char* string,char* delimeter,int index)
 	return word;
 }
 
-/*
-
-// Recibe una entrada de un pipe optimizando la memoria utilizada
-void recieveFromPipe(char *bufferToRecieve, char* in_file_name)
-{
-	// Enviamos la orden al servidor de los datos que necesitamos
-	char* buffer; //Variable en la que guardaremos los datos que vamos recibir del pipe
-	char* bufferLength; // Variable en la que guardaremos la longitud que recibiremos por el pipe
-	int length; // Variable en la que guardaremos el valor numerico de la longitud recibida
-	int in_fd;
-
-	in_fd = open(in_file_name, O_RDONLY);
-
-	// Recibimos la longitud de los datos que vamos recibir
-	bufferLength = malloc(11);
-	read(in_fd, bufferLength, 11);
-
-	close(in_fd);
-
-	// Convertimos la longitud recibida en enteros  
-	length = atoi(bufferLength);
-	// Reservo el espacio necesario para el nuevo buffer
-	bufferToRecieve = (char *) malloc(length);		// error ortografico
-
-	in_fd = open(in_file_name, O_RDONLY);
-
-	// Recibimos La lista de usuarios
-	read(in_fd, bufferToRecieve, length);
-	close(in_fd);
-	// Libero el espacio utilizado por la longitud ya que no se utilizara mas
-	free(bufferLength);
-
-}
-
-// Recibe una entrada de un pipe optimizando la memoria utilizada
-void sendThroughPipe(char *bufferToSend, char* out_file_name)
-{
-	// Enviamos la orden al servidor de los datos que necesitamos
-	char* bufferLength; // Variable en la que guardaremos la longitud que recibiremos por el pipe
-	int length; // Variable en la que guardaremos el valor numerico de la longitud recibida
-	int out_fd;
-
-	// Calculamos la longitud del mensaje a enviar y lo enviamos
-	bufferLength = malloc(11);		
-	length = strlen(bufferToSend);
-	sprintf(bufferLength,"%d",length);  // esto no tiene sentido 
-
-	out_fd = open(out_file_name, O_RDONLY);
-	write(out_fd, bufferLength, 11); 
-	close(out_fd);
-
-	// Enviamos el mensaje
-	out_fd = open(out_file_name, O_RDONLY);
-	write(out_fd, bufferToSend, length);
-	close(out_fd);
-
-	// Liberamos la memoria utilizada para enviar la orden
-	free(bufferLength);
-	free(bufferToSend);		// esto de aca es peligroso
-}
-
-*/
-
-
 
 // ********** Probamos funcion para comunicarse por medio de pipes
 void recieveFromPipe(char *bufferToRecieve, char* in_file_name) {
@@ -202,10 +139,6 @@ void sendThroughPipe(char *bufferToSend, char* out_file_name) {
 	close(fifo);
 }
 
-
-
-
-
 // crea y abre el pipe nominal fifo_name
 // retorna el file descriptor del pipe creado
 int open_fifo(const char *fifo_name) {
@@ -220,8 +153,7 @@ int open_fifo(const char *fifo_name) {
     // abrir el pipe para leer conexiones entrantes
     fifo = open(fifo_name, O_RDONLY | O_NONBLOCK);
 
-    //if (fifo == -1) perror(getError(mkfifoError,__LINE__,__FILE__));
-    if (fifo == -1) perror("mkfifo");
+    if (fifo == -1) perror("server mkfifo");
 
     return fifo;
 }
