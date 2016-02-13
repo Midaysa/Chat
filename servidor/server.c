@@ -3,7 +3,6 @@
 #include <time.h>               // sleep
 #include <fcntl.h>              // O_NONBLOCK, etc
 #include <stdio.h>              // printf
-#include <sys/queue.h>          // list macros
 #include <stdlib.h>             // malloc, free
 #include <stdbool.h>            // bool, true, false
 #include <unistd.h>             // unlink
