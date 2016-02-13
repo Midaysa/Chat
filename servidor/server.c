@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
                                 // al servidor y viceversa
     char tmp[MSG_LEN];          // string temporal para agregar origen de mensaje
     int fifo;                   // fd del pipe del servidor
-    fd_set fdset;               // crear set de pipes nominales
+    fd_set fdset, error_fdset;  // crear sets de pipes nominales
     char in_file_name[11],     	// nombre de los pipes de entrada
          out_file_name[11];
     int in_fd, out_fd;          // file descriptors temporales para clientes
@@ -85,18 +85,29 @@ int main(int argc, char *argv[]) {
         printf("escuchando conexiones...\n");
 
         FD_ZERO(&fdset);                // limpiar el set de pipes nominales
+        FD_ZERO(&error_fdset);
         FD_SET(fifo, &fdset);           // agregar fifo al set de pipes
         n = 100;                        // sustituir por: fd mas alto +1
 
         strcpy(message, "");
 
-        for (i=0; i<N; i++)             // agregar pipes de todos los usuarios al fd_set
-            FD_SET(clients[i].in_fd, &fdset);
+        for (i=0; i<N; i++){             // agregar pipes de todos los usuarios al fd_set
+            if (strlen(clients[i].username) > 0) {
+                FD_SET(clients[i].in_fd, &fdset);
+            }
+        }
 
-        rv = select(n, &fdset, NULL, NULL, &tv);
+        rv = select(n, &fdset, NULL, &error_fdset, &tv);
 
         if (rv == -1) {
             perror("rvError");
+            for (i=0; i<N; i++) {
+                if (FD_ISSET(clients[i].in_fd, &error_fdset)) {
+                    printf("Error on: %s| %d | %d\n", clients[i].username, 
+                                                      clients[i].in_fd,
+                                                      clients[i].out_fd);
+                }
+            }
         }
         else if (rv > 0) {              // existen archivos con datos para leer
             // si existe una nueva solicitud de conexion en el pipe 'fifo'
@@ -161,10 +172,8 @@ int main(int argc, char *argv[]) {
                     }
                     else if (strcmp(token, "-salir") == 0) {
                         printf("logging out\n");
-                        strcpy(message, "-salir");
-                        write(clients[i].out_fd, message, MSG_LEN);
+                        write(clients[i].out_fd, "-salir", MSG_LEN);
                         logout(clients[i].username);
-                        continue;
                     }
                 }
             }
@@ -272,6 +281,7 @@ void login(char username[], int in_fd, int out_fd) {
     for (i=0; i<N; i++) {
         if (strcmp(clients[i].username, "") == 0) {
             strcpy(clients[i].username, username);
+            strcpy(clients[i].status, "");
             clients[i].in_fd = in_fd;
             clients[i].out_fd = out_fd;
             break;
@@ -297,6 +307,7 @@ void logout(char username[]) {
                 delete_friend(clients[friend_id], i);
                 clients[i].friends[j] = -1;
             }
+            break;
         }
     }
 }

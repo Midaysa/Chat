@@ -17,8 +17,8 @@ void ParentProcess(char[]);
 void write_full(char *token, char dst[]);
 char split_first(char[], char[], char[]);
 
-/* Hay que permitir que se le pasen argumentos al cliente */
 
+/* Hay que permitir que se le pasen argumentos al cliente */
 int main(int argc, char *argv[]) {
     int len;
     char in_file_name[NAME_LEN], out_file_name[NAME_LEN];  // nombre de los
@@ -45,26 +45,12 @@ int main(int argc, char *argv[]) {
     }
 
     //printf("%s %s\n", server_pipe_name, username);
-    /*int i;
-    for (i=0; i<argc; i++) {
-        printf("agrv[%d] = %s\n", i, argv[i]);
-    }
-    */
 
     // abrir el pipe publico de conexiones nuevas del servidor
     fifo = open(server_pipe_name, O_WRONLY);
     printf("%s\n", server_pipe_name);
 
     if (fifo == -1) perror("open(server_pipe_name)");
-
-    // convierte r a char y lo almacena en in_file_name
-    /*r = rand() % 1000000000 + 1000000000;
-    sprintf(in_file_name, "%d", r);
-
-    r = rand() % 1000000000 + 1000000000;
-    sprintf(out_file_name, "%d", r);
-    printf("%s %s\n", in_file_name, out_file_name);
-    */
 
     // in_file_name = username + "_in"
     // out_file_name = username + "_out"
@@ -84,17 +70,10 @@ int main(int argc, char *argv[]) {
     write(fifo, message, strlen(message));
     close(fifo);
 
-    pid_t pid;
-    pid = fork();
-
-    if (pid == 0)
-        ChildProcess(in_file_name);
+    if (fork() == 0)
+        ChildProcess(in_file_name);     // Proceso que escucha notificaciones
     else
-        ParentProcess(out_file_name);
-    while(true) {
-        printf("warning: stalling..!");
-        break;
-    }
+        ParentProcess(out_file_name);   // Proceso que manda mensajes
 }
 
 // Maneja la salida de los mensajes
@@ -144,10 +123,11 @@ void ParentProcess(char out_file_name[]) {
         }
         close(out_fd);
     }
+    
     close(out_fd);
-    sleep(5);
     unlink(out_file_name);
     printf("ParentProcess exiting\n");
+    sleep(2);
     exit(0);
 }
 
@@ -168,9 +148,10 @@ void ChildProcess(char in_file_name[]) {
         sleep(1);
     }
 
-    printf("ChildProcess exiting\n");
     close(in_fd);
     unlink(in_file_name);
+    printf("ChildProcess exiting\n");
+    sleep(2);
     exit(0);
 }
 
