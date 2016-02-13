@@ -141,20 +141,21 @@ int main(int argc, char *argv[]) {
     mkfifo(in_file_name, BASIC_PERMISSIONS, O_NONBLOCK);
     // crear pipe (nominal) de salida
     mkfifo(out_file_name, BASIC_PERMISSIONS | O_NONBLOCK);
-    // Abrir pipe de entrada
-    in_fd = open(in_file_name, O_RDONLY);
+
+
 
     sprintf(message, "%s %s %s\n", username, in_file_name, out_file_name);
     wprintw(ventana1,"message = %s\n", message);
     write(fifo, message, strlen(message));
     close(fifo);
 
-    in_fd = open(in_file_name, O_RDONLY);      // abrir el pipe para leer datos
+
     strcpy(message, "");
+    in_fd = open(in_file_name, O_RDONLY);      // abrir el pipe para leer datos
     read(in_fd, message, MSG_LEN);
     close(in_fd);
-    wprintw(ventana1,"Respuesta del servidor: %s\n", message);
-
+    wprintw(ventana1,"Respuesta del servidor: %s \n", message);
+    wrefresh(ventana1);
     strcpy(dest, "");
 
 	wprintw(ventana1, "--------- Mega Servicio De Chat! Bienvenido! ---------\n \n");
@@ -164,11 +165,15 @@ int main(int argc, char *argv[]) {
 	{
         char buffer[TAM];
 
-        in_fd = open(in_file_name, O_RDONLY);      // abrir el pipe para leer datos
+        in_fd = open(in_file_name, O_RDONLY | O_NONBLOCK);      // abrir el pipe para leer datos
         strcpy(message, "");
         read(in_fd, message, MSG_LEN);
         close(in_fd);
-        wprintw(ventana1,"Respuesta del servidor: %s\n", message);
+        if (strcmp(message, "") != 0)
+        {
+        	wprintw(ventana1,"Respuesta del servidor: %s\n", message);
+        }
+
         wrefresh(ventana1);
 
 
@@ -180,14 +185,14 @@ int main(int argc, char *argv[]) {
         wprintw(ventana1,"command = |%s| token = |%s|\n", command, token);
 
 		// Si No Se ha definido el usuario al escribir
-		if (dest == NULL)
+		if (dest == "")
 		{
-			wprintw(ventana1, "%s: %s\n", in_file_name,buffer);
+			wprintw(ventana1, "%s: %s\n", in_file_name,command);
 		}
 		// Si Se ha definido el usuario al escribir
 		else
 		{
-			wprintw(ventana1, "%s -> %s: %s\n", username,dest,buffer);
+			wprintw(ventana1, "%s -> %s: %s\n", username,dest,command);
 		}
 
 		//
@@ -217,15 +222,14 @@ int main(int argc, char *argv[]) {
 			}
 	        else
 	        {
-	        	wprintw(ventana1, "Orden Invalida");
-	        	continue;
+	        	wprintw(ventana1, "Orden Invalida\n");
 	        }
 		}
         else
         {
         	if (strcmp(dest,"") == 0)
         	{
-        		wprintw(ventana1, "No le esta escribiendo a ningun usuario!");
+        		wprintw(ventana1, "No le esta escribiendo a ningun usuario!\n");
         	}
         	else
         	{
