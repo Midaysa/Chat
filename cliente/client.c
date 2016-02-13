@@ -141,13 +141,21 @@ int main(int argc, char *argv[]) {
     mkfifo(in_file_name, BASIC_PERMISSIONS, O_NONBLOCK);
     // crear pipe (nominal) de salida
     mkfifo(out_file_name, BASIC_PERMISSIONS | O_NONBLOCK);
+    // Abrir pipe de entrada
+    in_fd = open(in_file_name, O_RDONLY);
 
+    sprintf(message, "%s %s %s\n", username, in_file_name, out_file_name);
     wprintw(ventana1,"message = %s\n", message);
     write(fifo, message, strlen(message));
     close(fifo);
 
-	char * order;
-	char * userToWrite = NULL;
+    in_fd = open(in_file_name, O_RDONLY);      // abrir el pipe para leer datos
+    strcpy(message, "");
+    read(in_fd, message, MSG_LEN);
+    close(in_fd);
+    wprintw(ventana1,"Respuesta del servidor: %s\n", message);
+
+    strcpy(dest, "");
 
 	wprintw(ventana1, "--------- Mega Servicio De Chat! Bienvenido! ---------\n \n");
 	wrefresh(ventana1);
@@ -165,13 +173,14 @@ int main(int argc, char *argv[]) {
 
 
         out_fd = open(out_file_name, O_WRONLY);  // abrir el pipe para enviar datos
+        enfocarVentana2();
         wgetnstr(ventana2, command, MSG_LEN); // Leer una l�nea de la entrada
         command[strlen(command)-1] = 0;          // sustituir \n por \0 al final
         token = strtok(command, " ");      // token = primera palabra del comando
         wprintw(ventana1,"command = |%s| token = |%s|\n", command, token);
 
 		// Si No Se ha definido el usuario al escribir
-		if (userToWrite == NULL)
+		if (dest == NULL)
 		{
 			wprintw(ventana1, "%s: %s\n", in_file_name,buffer);
 		}
@@ -214,7 +223,14 @@ int main(int argc, char *argv[]) {
 		}
         else
         {
-            write(out_fd, command, MSG_LEN);
+        	if (strcmp(dest,"") == 0)
+        	{
+        		wprintw(ventana1, "No le esta escribiendo a ningun usuario!");
+        	}
+        	else
+        	{
+        		write(out_fd, command, MSG_LEN);
+        	}
         }
         close(out_fd);
 

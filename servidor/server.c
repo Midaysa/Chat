@@ -263,6 +263,7 @@ void login(char username[], int in_fd, int out_fd) {
             clients[i].in_fd = in_fd;
             clients[i].out_fd = out_fd;
             printf("%d %s %s %d %d \n",i,clients[i].username,clients[i].status,clients[i].in_fd,clients[i].out_fd);
+            write(out_fd, successMessage, strlen(successMessage));
             break;
         }
     }
