@@ -22,7 +22,6 @@ struct client {
     int in_fd, out_fd;
 } clients[N];
 
-int open_fifo(const char *fifo_name);
 void initialize();
 void sendMessage(char username[], char message[]);
 void write_full(char *token, char dst[]);
@@ -66,10 +65,12 @@ int main(int argc, char *argv[]) {
     int i, j;                   // variables de iteración simple
     char *token;
 
-    if (argc == 2) {
+    if (argc == 2)
+    {
         strcpy(server_pipe_name, argv[1]);
     }
-    else {
+    else
+    {
         strcpy(server_pipe_name, "/tmp/servidor");
     }
 
@@ -97,25 +98,26 @@ int main(int argc, char *argv[]) {
         if (rv == -1) {
             perror("rvError");
         }
-        else if (rv > 0) {              // existen archivos con datos para leer
+        else if (rv > 0)
+        {              // existen archivos con datos para leer
             // si existe una nueva solicitud de conexion en el pipe 'fifo'
-            if(FD_ISSET(fifo, &fdset)) {
-                //printf("fifo ready to read!\n");
+            if(FD_ISSET(fifo, &fdset))
+            {
+            	printf("fifo ready to read!\n");
 
                 // agregar informacion del nuevo usuario al lista
                 // leer del pipe fifo los id's de los pipes del cliente
 
                 read(fifo, message, MSG_LEN);
+                printf("fifo was read!\n");
                 sscanf(message, "%s %s %s\n", username, out_file_name, in_file_name);
-
-                //printf("%s %s %s\n", username, in_file_name, out_file_name);
+                printf("%s %s %s\n", username, in_file_name, out_file_name);
                 close(fifo);
                 fifo = open_fifo(server_pipe_name);
                 in_fd = open(in_file_name, O_RDONLY | O_NONBLOCK);
                 out_fd = open(out_file_name, O_WRONLY | O_NONBLOCK);
                 login(username, in_fd, out_fd);
-                //printf("login\n");
-                //sendMessage(username, mensaje);
+                printf("login\n");
             }
 
             for (i=0; i<N; i++) {
@@ -174,24 +176,7 @@ int main(int argc, char *argv[]) {
 
     // FUNCIONES PARA REALIZAR DISTINTAS TAREAS DEL SERVIDOR
 
-// crea y abre el pipe nominal fifo_name
-// retorna el file descriptor del pipe creado
-int open_fifo(const char *fifo_name) {
-    int fifo;
 
-    // eliminar el pipe nominal creado en alguna otra ejecución del server
-    unlink(fifo_name);
-    // esperar 1 seg para que el SO lo elimine completamente
-    sleep(1);
-    // crear pipe (nominal) de conexiones nuevas
-    mkfifo(fifo_name, BASIC_PERMISSIONS | O_NONBLOCK);
-    // abrir el pipe para leer conexiones entrantes
-    fifo = open(fifo_name, O_RDONLY | O_NONBLOCK);
-
-    if (fifo == -1) perror("server mkfifo");
-
-    return fifo;
-}
 
 // Inicializa el arreglo de clientes
 void initialize() {
@@ -263,7 +248,9 @@ void login(char username[], int in_fd, int out_fd) {
     int i;
 
     for (i=0; i<N; i++) {
-        if (strcmp(clients[i].username, "") == 0) {
+        if (strcmp(clients[i].username, "") == 0)
+        {
+        	printf("Logre el login");
             strcpy(clients[i].username, username);
             clients[i].in_fd = in_fd;
             clients[i].out_fd = out_fd;
@@ -316,4 +303,5 @@ char split_first(char str[], char first[], char second[]) {
         second[j] = str[i];
 
     second[j] = 0;
+    return second[j];
 }

@@ -24,6 +24,7 @@ WINDOW *ventana1, *ventana2;
 void enfocarVentana2();
 void limpiarVentana2();
 void write_full(char *token, char dst[]);
+void sigintHandler(int dummy);
 
 /* Hay que permitir que se le pasen argumentos al cliente */
 
@@ -42,15 +43,13 @@ int main(int argc, char *argv[]) {
     char command[MSG_LEN], first[MSG_LEN], second[MSG_LEN], message[MSG_LEN],
              dest[NAME_LEN], *token;
 
+    signal(SIGINT, sigintHandler); // Activamos el manejador de interrupciones
+
     srand(time(NULL));                         // inicializa semilla del random
 
 
 	if (argc == 1)
 	{
-//		in_file_name = (char *) malloc(strlen("System"));
-//		strcpy(in_file_name,"System");
-//		out_file_name = (char *) malloc(strlen("/tmp/servidor"));
-//		strcpy(out_file_name,"/tmp/servidor");
 		strcpy(username, "System");
 		strcpy(server_pipe_name, "/tmp/servidor");
 	}
@@ -60,24 +59,18 @@ int main(int argc, char *argv[]) {
 		// Si recibo un argumento con el prefijo -p entonces asigno un nombre de pipe
 			if ((strcmp(argv[1],"-p")) == 0)
 			{
-//				out_file_name = (char *) malloc(strlen(argv[2]));
-//				strcpy(out_file_name,argv[2]);
 				strcpy(server_pipe_name, argv[2]);
 
 				// Si recibo otro argumento entonces defino el nombre de usuario
 				if (argc == 4)
 				{
-//					in_file_name = (char *) malloc(strlen(argv[3]));
-//					strcpy(in_file_name,argv[3]);
 					strcpy(username, argv[3]);
 				}
 
 				// Si no recibo otro argumento entonces es el usuario del sistema
 				else
 				{
-					//	in_file_name = (char *) malloc(strlen("System"));
-					//	strcpy(in_file_name,"System");
-						strcpy(username, "System");
+					strcpy(username, "System");
 				}
 			}
 
@@ -85,24 +78,12 @@ int main(int argc, char *argv[]) {
 			else
 			{
 				// Si no defino nombre de servidor, escogo el nombre por defecto
-//				out_file_name = (char *) malloc(strlen("/tmp/servidor"));
-//				strcpy(out_file_name,"/tmp/servidor");
 				strcpy(server_pipe_name, "/tmp/servidor");
 
 				// Recibo un usuario
 				if (argc == 2)
 				{
-//					in_file_name = (char *) malloc(strlen(argv[1]));
-//					strcpy(in_file_name,argv[1]);
 			        strcpy(username, argv[1]);
-				}
-
-				// No recibo ningun dato
-				else if (argc == 1)
-				{
-//					in_file_name = (char *) malloc(strlen("System"));
-//					strcpy(in_file_name,"System");
-			        strcpy(username, "System");
 				}
 
 				// Recibo argumentos pero en el orden incorrecto
@@ -121,54 +102,9 @@ int main(int argc, char *argv[]) {
 		exit(0);
 	}
 
-
-    //printf("%s %s\n", server_pipe_name, username);
-    /*int i;
-    for (i=0; i<argc; i++) {
-        printf("agrv[%d] = %s\n", i, argv[i]);
-    }
-    */
-
-    // abrir el pipe publico de conexiones nuevas del servidor
-    fifo = open(server_pipe_name, O_WRONLY);
-    printf("%s\n", server_pipe_name);
-
-    if (fifo == -1) perror("open(server_pipe_name)");
-
-    // convierte r a char y lo almacena en in_file_name
-    /*r = rand() % 1000000000 + 1000000000;
-    sprintf(in_file_name, "%d", r);
-
-    r = rand() % 1000000000 + 1000000000;
-    sprintf(out_file_name, "%d", r);
-    printf("%s %s\n", in_file_name, out_file_name);
-    */
-
-    // in_file_name = username + "_in"
-    // out_file_name = username + "_out"
-    strcpy(in_file_name, username);
-    strcpy(out_file_name, username);
-    strcat(in_file_name, "_in");
-    strcat(out_file_name, "_out");
-
-    // message = in_file_name + ' ' + out_file_name
-    sprintf(message, "%s %s %s\n", username, in_file_name, out_file_name);
-
-    // crear pipe (nominal) de entrada
-    mkfifo(in_file_name, BASIC_PERMISSIONS, O_NONBLOCK);
-    // crear pipe (nominal) de salida
-    mkfifo(out_file_name, BASIC_PERMISSIONS | O_NONBLOCK);
-
-    write(fifo, message, strlen(message));
-    close(fifo);
-
-    pid_t pid;
-    pid = fork();
-
     initscr(); // Inicializar la biblioteca ncurses
 
-    if (LINES < LINES_MIN || COLS < COLS_MIN)
-    {
+    if (LINES < LINES_MIN || COLS < COLS_MIN) {
         endwin(); // Restaurar la operaci�n del terminal a modo normal
         printf("El terminal es muy peque�o para correr este programa.\n");
         exit(0);
@@ -185,10 +121,35 @@ int main(int argc, char *argv[]) {
     scrollok(ventana2, TRUE);
     limpiarVentana2(); // Dibujar la l�nea horizontal
 
+    strcpy(in_file_name, username);
+    strcpy(out_file_name, username);
+    strcat(in_file_name, "_in");
+    strcat(out_file_name, "_out");
+
+    // message = in_file_name + ' ' + out_file_name
+    wprintw(ventana1, message, "username = %s, in_file_name = %s, out_file_name = %s\n", username, in_file_name, out_file_name);
+    wrefresh(ventana1);
+
+    // abrir el pipe publico de conexiones nuevas del servidor
+    fifo = open(server_pipe_name, O_WRONLY);
+    wprintw(ventana1,"server_pipe_name = %s\n", server_pipe_name);
+    wrefresh(ventana1);
+
+    if (fifo == -1) perror("open(server_pipe_name)");
+
+    // crear pipe (nominal) de entrada
+    mkfifo(in_file_name, BASIC_PERMISSIONS, O_NONBLOCK);
+    // crear pipe (nominal) de salida
+    mkfifo(out_file_name, BASIC_PERMISSIONS | O_NONBLOCK);
+
+    write(fifo, message, strlen(message));
+    close(fifo);
+
 	char * order;
 	char * userToWrite = NULL;
 
-	wprintw(ventana1, "Mega Servicio De Chat! Bienvenido! \n \n");
+	wprintw(ventana1, "--------- Mega Servicio De Chat! Bienvenido! ---------\n \n");
+	wrefresh(ventana1);
 
 	while(true)
 	{
@@ -198,18 +159,15 @@ int main(int argc, char *argv[]) {
         strcpy(message, "");
         read(in_fd, message, MSG_LEN);
         close(in_fd);
-        printf("Respuesta del servidor: %s\n", message);
+        wprintw(ventana1,"Respuesta del servidor: %s\n", message);
+        wrefresh(ventana1);
 
-        if (strcmp(message, "-salir") == 0) {
-            break;
-        }
-        sleep(1);
 
         out_fd = open(out_file_name, O_WRONLY);  // abrir el pipe para enviar datos
         wgetnstr(ventana2, command, MSG_LEN); // Leer una l�nea de la entrada
         command[strlen(command)-1] = 0;          // sustituir \n por \0 al final
         token = strtok(command, " ");      // token = primera palabra del comando
-        printf("command = |%s| token = |%s|\n", command, token);
+        wprintw(ventana1,"command = |%s| token = |%s|\n", command, token);
 
 		// Si No Se ha definido el usuario al escribir
 		if (userToWrite == NULL)
@@ -228,7 +186,7 @@ int main(int argc, char *argv[]) {
 		{
 			if (strcmp(token, "-estoy") == 0) {
 				write_full(token, command);
-				printf("command = |%s|\n", command);
+				wprintw(ventana1,"command = |%s|\n", command);
 				write(out_fd, command, MSG_LEN);
 				// mostrar en algun label de la GUI este estado
 			}
@@ -250,6 +208,7 @@ int main(int argc, char *argv[]) {
 	        else
 	        {
 	        	wprintw(ventana1, "Orden Invalida");
+	        	continue;
 	        }
 		}
         else
@@ -266,9 +225,6 @@ int main(int argc, char *argv[]) {
     close(out_fd);
     sleep(5);
     unlink(out_file_name);
-    printf("ParentProcess exiting\n");
-
-    printf("ChildProcess exiting\n");
     close(in_fd);
     unlink(in_file_name);
 
@@ -306,4 +262,9 @@ void limpiarVentana2() {
     mvwhline(ventana2, 0, 0, 0, 20); // Dibujar la l�nea horizontal
     wmove(ventana2, 1, 0);
     wrefresh(ventana2);
+}
+
+void sigintHandler(int dummy) {
+    endwin(); // Restaurar la operaci�n del terminal a modo normal
+    exit(0);
 }

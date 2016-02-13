@@ -1,5 +1,5 @@
 client: client.o commons.o
-	gcc client.o commons.o -o client -lncurses
+	gcc client.o commons.o -o ../executables/client -lncurses
 
 client.o:
 	gcc -g -c client.c ../commons.c ../commons.h 

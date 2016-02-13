@@ -138,10 +138,6 @@ void sendThroughPipe(char *bufferToSend, char* out_file_name) {
 	close(fifo);
 }
 
-
-
-
-
 // crea y abre el pipe nominal fifo_name
 // retorna el file descriptor del pipe creado
 int open_fifo(const char *fifo_name) {
@@ -156,8 +152,7 @@ int open_fifo(const char *fifo_name) {
     // abrir el pipe para leer conexiones entrantes
     fifo = open(fifo_name, O_RDONLY | O_NONBLOCK);
 
-    //if (fifo == -1) perror(getError(mkfifoError,__LINE__,__FILE__));
-    if (fifo == -1) perror("mkfifo");
+    if (fifo == -1) perror("server mkfifo");
 
     return fifo;
 }
