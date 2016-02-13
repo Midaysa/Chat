@@ -57,8 +57,9 @@ int main(int argc, char *argv[]) {
                                 // si hubo error (-1) o si hubo timeout (0)
     char message[MSG_LEN];      // string de datos enviados desde los clientes
                                 // al servidor y viceversa
+    char tmp[MSG_LEN];          // string temporal para agregar origen de mensaje
     int fifo;                   // fd del pipe del servidor
-    fd_set fdset;               // crear set de pipes nominales
+    fd_set fdset, error_fdset;  // crear sets de pipes nominales
     char in_file_name[11],     	// nombre de los pipes de entrada
          out_file_name[11];
     int in_fd, out_fd;          // file descriptors temporales para clientes
@@ -87,18 +88,29 @@ int main(int argc, char *argv[]) {
         printf("escuchando conexiones...\n");
 
         FD_ZERO(&fdset);                // limpiar el set de pipes nominales
+        FD_ZERO(&error_fdset);
         FD_SET(fifo, &fdset);           // agregar fifo al set de pipes
         n = 100;                        // sustituir por: fd mas alto +1
 
         strcpy(message, "");
 
-        for (i=0; i<N; i++)             // agregar pipes de todos los usuarios al fd_set
-            FD_SET(clients[i].in_fd, &fdset);
+        for (i=0; i<N; i++){             // agregar pipes de todos los usuarios al fd_set
+            if (strlen(clients[i].username) > 0) {
+                FD_SET(clients[i].in_fd, &fdset);
+            }
+        }
 
-        rv = select(n, &fdset, NULL, NULL, &tv);
+        rv = select(n, &fdset, NULL, &error_fdset, &tv);
 
         if (rv == -1) {
             perror("rvError");
+            for (i=0; i<N; i++) {
+                if (FD_ISSET(clients[i].in_fd, &error_fdset)) {
+                    printf("Error on: %s| %d | %d\n", clients[i].username, 
+                                                      clients[i].in_fd,
+                                                      clients[i].out_fd);
+                }
+            }
         }
         else if (rv > 0)
         {              // existen archivos con datos para leer
@@ -122,52 +134,53 @@ int main(int argc, char *argv[]) {
                 printf("login\n");
             }
 
-            for (i=0; i<N; i++)
-            {
-            	if (strcmp(clients[i].username,"") != 0)
-            	{
-					printf("%d %s %s %d %d \n",i,clients[i].username,clients[i].status,clients[i].in_fd,clients[i].out_fd);
-					if (FD_ISSET(clients[i].in_fd, &fdset)) {
-						printf("comando recibido de |%s|\n", clients[i].username);
-						read(clients[i].in_fd, message, MSG_LEN);
-						printf("message = |%s|\n", message);
-						token = strtok(message, " ");      // token = primera palabra del comando
-						printf("token = |%s|\n", token);
-						if (token == NULL) {
-							printf("null token\n");
-							logout(clients[i].username);
-							continue;
-						}
-						if (strcmp(token, "-estoy") == 0) {
-							token = strtok(NULL, " ");
-							write_full(token, message);
-							printf("client status = |%s|\n", message);
-							strcpy(clients[i].status, message);
-						}
-						else if (strcmp(token, "-quien") == 0) {
-							strcpy(message, "");
+            for (i=0; i<N; i++) {
+                if (FD_ISSET(clients[i].in_fd, &fdset)) {
+                    printf("comando recibido de |%s|\n", clients[i].username);
+                    strcpy(message, "");
+                    read(clients[i].in_fd, message, MSG_LEN);
+                    printf("message = |%s|\n", message);
+                    token = strtok(message, " ");      // token = primera palabra del comando
+                    printf("token = |%s|\n", token);
+                    if (token == NULL) {
+                        printf("null token\n");
+                        logout(clients[i].username);
+                        continue;
+                    }
+                    if (strcmp(token, "-estoy") == 0) {
+                        token = strtok(NULL, " ");
+                        write_full(token, message);
+                        printf("client status = |%s|\n", message);
+                        strcpy(clients[i].status, message);
+                    }
+                    else if (strcmp(token, "-quien") == 0) {
+                        strcpy(message, "");
 
-							for (j=0; j<N; j++) {
-								if (strlen(clients[j].username) > 0)
-								{
-									strcat(message, clients[j].username);
-									strcat(message, ":");
-									strcat(message, clients[j].status);
-									strcat(message, "|");
-								}
-							}
-							write(clients[i].out_fd, message, MSG_LEN);
-						}
-						else if (strcmp(token, "-escribir") == 0) {
-							break;
-						}
-						else if (strcmp(token, "-salir") == 0) {
-							printf("logging out\n");
-							logout(clients[i].username);
-							continue;
-						}
-					}
-            	}
+                        for (j=0; j<N; j++) {
+                            if (strlen(clients[j].username) > 0) {
+                                strcat(message, clients[j].username);
+                                strcat(message, ":");
+                                strcat(message, clients[j].status);
+                                strcat(message, "|");
+                            }
+                        }
+                        write(clients[i].out_fd, message, MSG_LEN);
+                    }
+                    else if (strcmp(token, "-escribir") == 0) {
+                        token = strtok(NULL, " ");
+                        strcpy(username, token);
+                        token = strtok(NULL, " ");
+                        write_full(token, message);
+                        sprintf(tmp, "mensaje de %s: %s", clients[i].username, message);
+                        sendMessage(username, tmp);
+                    }
+                    else if (strcmp(token, "-salir") == 0) {
+                        printf("logging out\n");
+                        write(clients[i].out_fd, "-salir", MSG_LEN);
+                        logout(clients[i].username);
+                    }
+                }
+
             }
         }
         sleep(1);
@@ -214,8 +227,7 @@ void sendMessage(char username[], char message[]) {
 
 // escribe lo que le sobra a token dentro de dst
 void write_full(char *token, char dst[]) {
-    char tmp[MSG_LEN];
-    strcpy(tmp, "");
+    char tmp[MSG_LEN] = "";
 
     while (token != NULL) {
         strcat(tmp, token);
@@ -288,6 +300,7 @@ void logout(char username[]) {
                 delete_friend(clients[friend_id], i);
                 clients[i].friends[j] = -1;
             }
+            break;
         }
     }
     numberUsers -= 1;

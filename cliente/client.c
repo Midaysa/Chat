@@ -26,8 +26,8 @@ void limpiarVentana2();
 void write_full(char *token, char dst[]);
 void sigintHandler(int dummy);
 
-/* Hay que permitir que se le pasen argumentos al cliente */
 
+/* Hay que permitir que se le pasen argumentos al cliente */
 int main(int argc, char *argv[]) {
     int len;
     char in_file_name[NAME_LEN], out_file_name[NAME_LEN];  // nombre de los
@@ -161,9 +161,11 @@ int main(int argc, char *argv[]) {
 	wprintw(ventana1, "--------- Mega Servicio De Chat! Bienvenido! ---------\n \n");
 	wrefresh(ventana1);
 
+
 	while(true)
 	{
         char buffer[TAM];
+
 
         in_fd = open(in_file_name, O_RDONLY | O_NONBLOCK);      // abrir el pipe para leer datos
         strcpy(message, "");
@@ -200,25 +202,23 @@ int main(int argc, char *argv[]) {
 		if (token[0] == '-')
 		{
 			if (strcmp(token, "-estoy") == 0) {
-				write_full(token, command);
-				wprintw(ventana1,"command = |%s|\n", command);
-				write(out_fd, command, MSG_LEN);
-				// mostrar en algun label de la GUI este estado
+	            write_full(token, command);
+	            printf("command = |%s|\n", command);
+	            write(out_fd, command, MSG_LEN);
+	            // mostrar en algun label de la GUI este estado
 			}
 			else if (strcmp(token, "-quien") == 0) {
-				write(out_fd, command, MSG_LEN);
+	            write(out_fd, command, MSG_LEN);
 			}
 			else if (strcmp(token, "-escribir") == 0) {
-
-				// extraer destinatario y pegarlo en dest
-				token = strtok(NULL, " ");
-				strcpy(dest, token);
+	            // extraer destinatario y pegarlo en dest
+	            token = strtok(NULL, " ");
+	            strcpy(dest, token);
 			}
 			else if (strcmp(token, "-salir") == 0) {
-				write(out_fd, command, MSG_LEN);
-				sleep(1);
-			    endwin(); // Restaurar la operaci�n del terminal a modo normal
-			    exit(0);
+	            write(out_fd, command, MSG_LEN);
+	            sleep(1);
+	            break;
 			}
 	        else
 	        {
@@ -233,7 +233,10 @@ int main(int argc, char *argv[]) {
         	}
         	else
         	{
-        		write(out_fd, command, MSG_LEN);
+                sprintf(message, "-escribir %s ", dest);
+                write_full(token, command);
+                strcat(message, command);
+                write(out_fd, message, MSG_LEN);
         	}
         }
         close(out_fd);
@@ -248,21 +251,20 @@ int main(int argc, char *argv[]) {
     unlink(out_file_name);
     close(in_fd);
     unlink(in_file_name);
-
     exit(0);
 }
 
 
 
 void write_full(char *token, char dst[]) {
-    char tmp[MSG_LEN];
+    char tmp[MSG_LEN] = "";
 
     while (token != NULL) {
+        //printf("write_full :: %s\n", token);
         strcat(tmp, token);
         strcat(tmp, " ");
         token = strtok(NULL, " ");
     }
-
     strcpy(dst, tmp);
     dst[strlen(dst)-1] = 0;
 }
