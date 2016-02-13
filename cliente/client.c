@@ -47,8 +47,6 @@ int main(int argc, char *argv[])
     char command[MSG_LEN], first[MSG_LEN], second[MSG_LEN], message[MSG_LEN],
              dest[NAME_LEN], *token;
 
-    signal(SIGINT, sigintHandler); // Activamos el manejador de interrupciones
-    signal(SIGALRM,AlrmSigHnd);
 
     srand(time(NULL));                         // inicializa semilla del random
 
@@ -222,7 +220,7 @@ int main(int argc, char *argv[])
 		{
 			wgetnstr(ventana2, command, MSG_LEN); // Leer una l�nea de la entrada
 
-			command[strlen(command)-1] = 0;          // sustituir \n por \0 al final
+			command[strlen(command)] = 0;          // sustituir \n por \0 al final
 			token = strtok(command, " ");      // token = primera palabra del comando
 			wprintw(ventana1,"command = |%s| token = |%s|\n", command, token);
 			wrefresh(ventana1);
@@ -333,6 +331,3 @@ void sigintHandler(int dummy) {
     exit(0);
 }
 
-void AlrmSigHnd(int signo)
-{
-}
