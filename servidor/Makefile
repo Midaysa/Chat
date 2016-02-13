@@ -8,4 +8,4 @@ commons.o:
 	gcc -g -c ../commons.c ../commons.h
 
 clean:
-	rm server.o server commons.o
+	rm server.o ../executables/server commons.o

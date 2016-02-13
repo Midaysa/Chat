@@ -28,6 +28,7 @@ const char *argOrdError = "Incorrect Order of arguments";
 
 const char *LogOutMessage = "Logging out... Thank You For Using Our Chat Services!";
 const char *LogOutServerMessage = " has just logged out!";
+const char *defaultStatus = "No Status";
 
 // Ordenes Cliente->Servidor
 

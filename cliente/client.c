@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
     strcat(out_file_name, "_out");
 
     // message = in_file_name + ' ' + out_file_name
-    wprintw(ventana1, message, "username = %s, in_file_name = %s, out_file_name = %s\n", username, in_file_name, out_file_name);
+    wprintw(ventana1,"username = %s, in_file_name = %s, out_file_name = %s\n", username, in_file_name, out_file_name);
     wrefresh(ventana1);
 
     // abrir el pipe publico de conexiones nuevas del servidor
@@ -142,6 +142,7 @@ int main(int argc, char *argv[]) {
     // crear pipe (nominal) de salida
     mkfifo(out_file_name, BASIC_PERMISSIONS | O_NONBLOCK);
 
+    wprintw(ventana1,"message = %s\n", message);
     write(fifo, message, strlen(message));
     close(fifo);
 

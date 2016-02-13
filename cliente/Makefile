@@ -8,4 +8,4 @@ commons.o:
 	gcc -g -c ../commons.c ../commons.h
 
 clean:
-	rm client.o commons.o client
+	rm client.o commons.o ../executables/client

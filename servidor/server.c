@@ -8,6 +8,7 @@
 #include <stdbool.h>            // bool, true, false
 #include <unistd.h>             // unlink
 #include <string.h>             // strlen
+#include "../commons.h"             // strlen
 
 #define MSG_LEN 500
 #define STATUS_LEN 100
@@ -29,6 +30,7 @@ void add_friend(struct client c, int friend_id);
 void delete_friend(struct client c, int friend_id);
 void login(char username[], int in_fd, int out_fd);
 void logout(char username[]);
+int numberUsers = 0;
 
 
 /*
@@ -120,47 +122,52 @@ int main(int argc, char *argv[]) {
                 printf("login\n");
             }
 
-            for (i=0; i<N; i++) {
-                if (FD_ISSET(clients[i].in_fd, &fdset)) {
-                    printf("comando recibido de |%s|\n", clients[i].username);
-                    read(clients[i].in_fd, message, MSG_LEN);
-                    printf("message = |%s|\n", message);
-                    token = strtok(message, " ");      // token = primera palabra del comando
-                    printf("token = |%s|\n", token);
-                    if (token == NULL) {
-                        printf("null token\n");
-                        logout(clients[i].username);
-                        continue;
-                    }
-                    if (strcmp(token, "-estoy") == 0) {
-                        token = strtok(NULL, " ");
-                        write_full(token, message);
-                        printf("client status = |%s|\n", message);
-                        strcpy(clients[i].status, message);
-                    }
-                    else if (strcmp(token, "-quien") == 0) {
-                        strcpy(message, "");
+            for (i=0; i<N; i++)
+            {
+            	if (strcmp(clients[i].username,"") != 0)
+            	{
+					printf("%d %s %s %d %d \n",i,clients[i].username,clients[i].status,clients[i].in_fd,clients[i].out_fd);
+					if (FD_ISSET(clients[i].in_fd, &fdset)) {
+						printf("comando recibido de |%s|\n", clients[i].username);
+						read(clients[i].in_fd, message, MSG_LEN);
+						printf("message = |%s|\n", message);
+						token = strtok(message, " ");      // token = primera palabra del comando
+						printf("token = |%s|\n", token);
+						if (token == NULL) {
+							printf("null token\n");
+							logout(clients[i].username);
+							continue;
+						}
+						if (strcmp(token, "-estoy") == 0) {
+							token = strtok(NULL, " ");
+							write_full(token, message);
+							printf("client status = |%s|\n", message);
+							strcpy(clients[i].status, message);
+						}
+						else if (strcmp(token, "-quien") == 0) {
+							strcpy(message, "");
 
-                        for (j=0; j<N; j++) {
-                            if (strlen(clients[j].username) > 0)
-                            {
-                                strcat(message, clients[j].username);
-                                strcat(message, ":");
-                                strcat(message, clients[j].status);
-                                strcat(message, "|");
-                            }
-                        }
-                        write(clients[i].out_fd, message, MSG_LEN);
-                    }
-                    else if (strcmp(token, "-escribir") == 0) {
-                        break;
-                    }
-                    else if (strcmp(token, "-salir") == 0) {
-                        printf("logging out\n");
-                        logout(clients[i].username);
-                        continue;
-                    }
-                }
+							for (j=0; j<N; j++) {
+								if (strlen(clients[j].username) > 0)
+								{
+									strcat(message, clients[j].username);
+									strcat(message, ":");
+									strcat(message, clients[j].status);
+									strcat(message, "|");
+								}
+							}
+							write(clients[i].out_fd, message, MSG_LEN);
+						}
+						else if (strcmp(token, "-escribir") == 0) {
+							break;
+						}
+						else if (strcmp(token, "-salir") == 0) {
+							printf("logging out\n");
+							logout(clients[i].username);
+							continue;
+						}
+					}
+            	}
             }
         }
         sleep(1);
@@ -250,20 +257,23 @@ void login(char username[], int in_fd, int out_fd) {
     for (i=0; i<N; i++) {
         if (strcmp(clients[i].username, "") == 0)
         {
-        	printf("Logre el login");
+        	printf("Logre el login \n");
             strcpy(clients[i].username, username);
+            strcpy(clients[i].status, defaultStatus);
             clients[i].in_fd = in_fd;
             clients[i].out_fd = out_fd;
+            printf("%d %s %s %d %d \n",i,clients[i].username,clients[i].status,clients[i].in_fd,clients[i].out_fd);
             break;
         }
     }
+    numberUsers += 1;
 }
 
 // Eliminar al usuario de todas las listas de amigos y vaciar sus datos
 void logout(char username[]) {
     int i, j, friend_id;
 
-    for(i=0; i<N; i++) {
+    for(i=0; i<numberUsers; i++) {
         if (strcmp(clients[i].username, username) == 0) {
             strcpy(clients[i].username, "");
             strcpy(clients[i].status, "");
@@ -279,6 +289,7 @@ void logout(char username[]) {
             }
         }
     }
+    numberUsers -= 1;
 }
 
 /*char status(char username[], int in_fd) {
