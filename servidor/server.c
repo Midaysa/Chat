@@ -170,6 +170,7 @@ int main(int argc, char *argv[]) {
                         add_friend(&clients[get_id(username)], clients[i].username);
                         //print_array(clients[i].friends);
                         //print_array(clients[get_id(username)].friends);
+                        sleep(0.001);
                     }
                     else if (strcmp(token, "-salir") == 0) {
                         printf("logging out\n");
