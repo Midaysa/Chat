@@ -25,10 +25,12 @@ void enfocarVentana2();
 void limpiarVentana2();
 void write_full(char *token, char dst[]);
 void sigintHandler(int dummy);
+void AlrmSigHnd(int signo);
 
 
 /* Hay que permitir que se le pasen argumentos al cliente */
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     int len;
     char in_file_name[NAME_LEN], out_file_name[NAME_LEN];  // nombre de los
                                                //pipes de entrada
@@ -44,6 +46,7 @@ int main(int argc, char *argv[]) {
              dest[NAME_LEN], *token;
 
     signal(SIGINT, sigintHandler); // Activamos el manejador de interrupciones
+    signal(SIGALRM,AlrmSigHnd);
 
     srand(time(NULL));                         // inicializa semilla del random
 
@@ -181,10 +184,15 @@ int main(int argc, char *argv[]) {
 
         out_fd = open(out_file_name, O_WRONLY);  // abrir el pipe para enviar datos
         enfocarVentana2();
+
+        //alarm(4); // AlrmSigHnd will called after 2 seconds.
         wgetnstr(ventana2, command, MSG_LEN); // Leer una l�nea de la entrada
+        //alarm(0); // Cancel signal registration
+
         command[strlen(command)-1] = 0;          // sustituir \n por \0 al final
         token = strtok(command, " ");      // token = primera palabra del comando
         wprintw(ventana1,"command = |%s| token = |%s|\n", command, token);
+        wrefresh(ventana1);
 
 		// Si No Se ha definido el usuario al escribir
 		if (dest == "")
@@ -290,4 +298,9 @@ void limpiarVentana2() {
 void sigintHandler(int dummy) {
     endwin(); // Restaurar la operaci�n del terminal a modo normal
     exit(0);
+}
+
+void AlrmSigHnd(int signo)
+{
+	continue;
 }

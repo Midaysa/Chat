@@ -84,7 +84,8 @@ int main(int argc, char *argv[]) {
     tv.tv_usec = 0;
     initialize();
 
-    while (true) {
+    while (true)
+    {
         printf("escuchando conexiones...\n");
 
         FD_ZERO(&fdset);                // limpiar el set de pipes nominales
@@ -153,20 +154,27 @@ int main(int argc, char *argv[]) {
                         printf("client status = |%s|\n", message);
                         strcpy(clients[i].status, message);
                     }
-                    else if (strcmp(token, "-quien") == 0) {
+                    else if (strcmp(token, "-quien") == 0)
+                    {
                         strcpy(message, "");
 
-                        for (j=0; j<N; j++) {
-                            if (strlen(clients[j].username) > 0) {
-                                strcat(message, clients[j].username);
-                                strcat(message, ":");
-                                strcat(message, clients[j].status);
-                                strcat(message, "|");
+                        for (j=0; j<N; j++)
+                        {
+                            if (strlen(clients[j].username) > 0)
+                            {
+                            	if (strcmp(clients[i].username,"") != 0)
+                            	{
+									strcat(message, clients[j].username);
+									strcat(message, ":");
+									strcat(message, clients[j].status);
+									strcat(message, "|");
+                            	}
                             }
                         }
                         write(clients[i].out_fd, message, MSG_LEN);
                     }
-                    else if (strcmp(token, "-escribir") == 0) {
+                    else if (strcmp(token, "-escribir") == 0)
+                    {
                         token = strtok(NULL, " ");
                         strcpy(username, token);
                         token = strtok(NULL, " ");
@@ -174,7 +182,8 @@ int main(int argc, char *argv[]) {
                         sprintf(tmp, "mensaje de %s: %s", clients[i].username, message);
                         sendMessage(username, tmp);
                     }
-                    else if (strcmp(token, "-salir") == 0) {
+                    else if (strcmp(token, "-salir") == 0)
+                    {
                         printf("logging out\n");
                         write(clients[i].out_fd, "-salir", MSG_LEN);
                         logout(clients[i].username);
@@ -186,7 +195,8 @@ int main(int argc, char *argv[]) {
         sleep(1);
 
         int i;
-        for (i=0;i<N;i++) {
+        for (i=0;i<N;i++)
+        {
             printf("%s, ", clients[i].username);
         }
 
@@ -212,6 +222,8 @@ void initialize() {
         }
     }
 }
+
+
 
 // Enviar mensaje al cliente indicado a través de su pipe
 void sendMessage(char username[], char message[]) {
@@ -279,7 +291,6 @@ void login(char username[], int in_fd, int out_fd) {
         }
     }
     write(out_fd, successMessage, strlen(successMessage));
-    numberUsers += 1;
 }
 
 // Eliminar al usuario de todas las listas de amigos y vaciar sus datos
@@ -287,7 +298,8 @@ void logout(char username[]) {
     int i, j, friend_id;
 
     for(i=0; i<numberUsers; i++) {
-        if (strcmp(clients[i].username, username) == 0) {
+        if (strcmp(clients[i].username, username) == 0)
+        {
             strcpy(clients[i].username, "");
             strcpy(clients[i].status, "");
             close(clients[i].in_fd);
@@ -303,7 +315,6 @@ void logout(char username[]) {
             break;
         }
     }
-    numberUsers -= 1;
 }
 
 /*char status(char username[], int in_fd) {
