@@ -40,3 +40,7 @@
 servidor/server
 cliente/client
 chat/chat
+
+*
+!/**/
+!*.*

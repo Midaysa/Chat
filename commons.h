@@ -23,6 +23,7 @@ extern const char *argOrdError;
 extern const char *LogOutMessage;
 extern const char *LogOutServerMessage;
 extern const char *successMessage;
+extern const char *defaultStatus;
 
 // Ordenes Cliente->Servidor
 
