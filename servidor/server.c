@@ -134,20 +134,24 @@ int main(int argc, char *argv[]) {
                 printf("login\n");
             }
 
-            for (i=0; i<N; i++) {
-                if (FD_ISSET(clients[i].in_fd, &fdset)) {
+            for (i=0; i<N; i++)
+            {
+                if (FD_ISSET(clients[i].in_fd, &fdset))
+                {
                     printf("comando recibido de |%s|\n", clients[i].username);
                     strcpy(message, "");
                     read(clients[i].in_fd, message, MSG_LEN);
                     printf("message = |%s|\n", message);
                     token = strtok(message, " ");      // token = primera palabra del comando
                     printf("token = |%s|\n", token);
-                    if (token == NULL) {
+                    if (token == NULL)
+                    {
                         printf("null token\n");
                         logout(clients[i].username);
                         continue;
                     }
-                    if (strcmp(token, "-estoy") == 0) {
+                    if (strcmp(token, "-estoy") == 0)
+                    {
                         token = strtok(NULL, " ");
                         write_full(token, message);
                         printf("client status = |%s|\n", message);
@@ -157,19 +161,30 @@ int main(int argc, char *argv[]) {
                     {
                         strcpy(message, "");
 
+                        if (strcmp(message, "") == 0)
+                        {
+                        	printf("message fue vaciado");
+                        }
+                        else
+                        {
+                        	printf("message = |%s|\n", message);
+                        }
+
                         for (j=0; j<N; j++)
                         {
                             if (strlen(clients[j].username) > 0)
                             {
-                            	if (strcmp(clients[i].username,"") != 0)
-                            	{
+                            		printf("j = |%d|\n", j);
+                            		printf("clients[j].username = |%s|\n", clients[j].username);
 									strcat(message, clients[j].username);
 									strcat(message, ":");
+									printf("clients[j].status = |%s|\n", clients[j].status);
 									strcat(message, clients[j].status);
-									strcat(message, "|");
-                            	}
+									strcat(message, "\n");
                             }
                         }
+                        printf("i = |%d|\n", i);
+
                         write(clients[i].out_fd, message, MSG_LEN);
                     }
                     else if (strcmp(token, "-escribir") == 0)

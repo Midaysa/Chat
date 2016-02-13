@@ -175,14 +175,13 @@ int main(int argc, char *argv[])
 	{
         char buffer[TAM];
 
-
         in_fd = open(in_file_name, O_RDONLY | O_NONBLOCK);      // abrir el pipe para leer datos
         strcpy(message, "");
         read(in_fd, message, MSG_LEN);
-        close(in_fd);
+        //close(in_fd);
         if (strcmp(message, "") != 0)
         {
-        	wprintw(ventana1,"Respuesta del servidor: %s\n", message);
+        	wprintw(ventana1,"Respuesta del servidor:\n\n%s\n", message);
         }
 
         wrefresh(ventana1);
