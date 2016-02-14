@@ -17,9 +17,11 @@
 extern const char *mkfifoError;
 extern const char *selectError;
 extern const char *openError;
+extern const char *rvError;
 extern const char *argNumError;
 extern const char *argOrdError;
 extern const char *termSizeError;
+extern const char *writeToMySelf;
 
 extern const char *LogOutMessage;
 extern const char *LogOutServerMessage;
@@ -30,6 +32,9 @@ extern const char *serverStartMessage;
 extern const char *defaultStatus;
 extern const char *defaultServer;
 extern const char *defaultUsername;
+extern const char *loginResultMessage;
+extern const char *helpMenu;
+
 
 // Ordenes Cliente->Servidor
 
@@ -37,6 +42,7 @@ extern const char *ordenQuien;
 extern const char *ordenEscribir;
 extern const char *ordenEstoy;
 extern const char *ordenSalir;
+extern const char *ordenAyuda;
 extern const char *ordenInvalida;
 extern const char *ordenCambiarConversacion;
 

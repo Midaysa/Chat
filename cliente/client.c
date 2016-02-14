@@ -49,6 +49,7 @@ int main(int argc, char *argv[])
 	char message[MSG_LEN];
 	char dest[NAME_LEN];
 	char*token;
+	int alto1; // Alto de la ventana 1
 
 	int    fd_stdin;	// identificador del pipe de stdin
 	fd_set readfds;	// fd_set para la entrada de datos
@@ -124,7 +125,7 @@ int main(int argc, char *argv[])
     cbreak();
     nonl();
 
-    int alto1 = LINES - ALTO; // Alto de la ventana 1
+    alto1 = LINES - ALTO;
     ventana1 = newwin(alto1, 0, 0, 0); // Crear la ventana 1
     ventana2 = newwin(ALTO, 0, alto1, 0); // Crear la ventana 2
     scrollok(ventana1, TRUE); //Activar el corrimiento autom�tico en la ventana 1
@@ -136,17 +137,9 @@ int main(int argc, char *argv[])
     strcat(in_file_name, "_in");
     strcat(out_file_name, "_out");
 
-    // message = in_file_name + ' ' + out_file_name
-    wprintw(ventana1,"username = %s, in_file_name = %s, out_file_name = %s\n", username, in_file_name, out_file_name);
-    wrefresh(ventana1);
-
     // abrir el pipe publico de conexiones nuevas del servidor
     fifo = open(server_pipe_name, O_WRONLY);
     if (fifo == -1) perror(getErrorMessage(openError,__LINE__,__FILE__));
-    wprintw(ventana1,"server_pipe_name = %s\n", server_pipe_name);
-    wrefresh(ventana1);
-
-
 
     // crear pipe (nominal) de entrada
     mkfifo(in_file_name, BASIC_PERMISSIONS, O_NONBLOCK);
@@ -167,7 +160,7 @@ int main(int argc, char *argv[])
 
     read(in_fd, message, MSG_LEN);
     close(in_fd);
-    wprintw(ventana1,"Resultado Del Inicio De Sesion: %s \n", message);
+    wprintw(ventana1,"%s %s \n", loginResultMessage,message);
     wrefresh(ventana1);
 
     if (strcmp(message,userNameNotAvaible) == 0)
@@ -199,7 +192,7 @@ int main(int argc, char *argv[])
         //close(in_fd);
         if (strcmp(message, "") != 0)
         {
-        	wprintw(ventana1,"\n%s\n", message);
+        	wprintw(ventana1,"%s\n", message);
         }
 
         wrefresh(ventana1);
@@ -236,9 +229,13 @@ int main(int argc, char *argv[])
 			// Pedimos la entrada del usuario
 			wgetnstr(ventana2, command, MSG_LEN); // Leer una l�nea de la entrada
 
+			// Permitimos el enter para evitar un segmentation fault
+			if (strcmp(command,"") == 0)
+			{
+				continue;
+			}
+
 			command[strlen(command)] = 0;          // sustituir \n por \0 al final
-			token = strtok(command, " ");      // token = primera palabra del comando
-			wrefresh(ventana1);
 
 			// Si No Se ha definido el usuario al escribir
 			if (dest == "")
@@ -251,39 +248,61 @@ int main(int argc, char *argv[])
 				wprintw(ventana1, "%s -> %s: %s\n", username,dest,command);
 			}
 
-			//
+			token = strtok(command, " ");      // token = primera palabra del comando
+			wrefresh(ventana1);
+
+			// Caso 1: Commando
 
 			if (token[0] == '-')
 			{
 				// Caso 1.1: Cambiar Estado
-				if (strcmp(token, ordenEstoy) == 0) {
+				if (strcmp(token, ordenEstoy) == 0)
+				{
 					write_full(token, command);
 					write(out_fd, command, MSG_LEN);
 					// mostrar en algun label de la GUI este estado
 				}
 
 				// Caso 1.2: Pedir a servidor la lista de usuarios
-				else if (strcmp(token, ordenQuien) == 0) {
+				else if (strcmp(token, ordenQuien) == 0)
+				{
 					write(out_fd, command, MSG_LEN);
 				}
 
 				// Caso 1.3: Cambiar conversacion
-				else if (strcmp(token, ordenEscribir) == 0) {
+				else if (strcmp(token, ordenEscribir) == 0)
+				{
 					// extraer destinatario y pegarlo en dest
 					token = strtok(NULL, " ");
 					strcpy(dest, token);
-					sprintf(command, "%s %s", ordenCambiarConversacion,dest);
-					write(out_fd, command, MSG_LEN);
+
+					if (strcmp(dest, username) == 0)
+					{
+						wprintw(ventana1, writeToMySelf);
+					}
+
+					else
+					{
+						sprintf(command, "%s %s", ordenCambiarConversacion,dest);
+						write(out_fd, command, MSG_LEN);
+					}
 				}
 
 				// Caso 1.4: Cierre de Sesion
-				else if (strcmp(token, ordenSalir) == 0) {
+				else if (strcmp(token, ordenSalir) == 0)
+				{
 					write(out_fd, command, MSG_LEN);
 					sleep(1);
 					break;
 				}
 
-				// Caso 1.5: Orden Invalida
+				// Caso 1.5: Cierre de Sesion
+				else if (strcmp(token, ordenAyuda) == 0)
+				{
+					displayCommandList();
+				}
+
+				// Caso 1.6: Orden Invalida
 				else
 				{
 					wprintw(ventana1, "%s\n",ordenInvalida);
@@ -362,3 +381,8 @@ void sigintHandler(int dummy)
     exit(0);
 }
 
+void displayCommandList()
+{
+	wprintw(ventana1, helpMenu);
+	wrefresh(ventana2);
+}

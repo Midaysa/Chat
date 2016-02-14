@@ -23,6 +23,8 @@ const char *openError = "open Error";
 const char *argNumError = "Numero Incorrecto de Argumentos";
 const char *argOrdError = "Orden Incorrecto de Argumentos";
 const char *termSizeError = "El terminal es muy pequeno para correr este programa.\n";
+const char *rvError = "rvError ";
+const char *writeToMySelf = "No puedes escribir mensajes para ti mismo";
 
 
 // Mensajes de sistema
@@ -33,6 +35,8 @@ const char *noUserSelectedMessage = "No le esta escribiendo a ningun usuario!\n"
 const char *defaultStatus = "Sin Status";
 const char *defaultServer = "/tmp/servidor";
 const char *defaultUsername = "System";
+const char *loginResultMessage = "Resultado Del Inicio De Sesion:";
+const char *helpMenu = "-quien: Muestra una lista de los usuarios conectados \n -estoy <Nuevo estado>: Cambia el estado actual \n -escribir <Usuario a escribir>: Cambia el usuario a escribir \n -salir: Cierra Sesion \n -ayuda: Muestra menu de commandos \n ";
 
 // Ordenes Cliente->Servidor
 
@@ -40,6 +44,7 @@ const char *ordenQuien = "-quien";
 const char *ordenEscribir = "-escribir";
 const char *ordenEstoy = "-estoy";
 const char *ordenSalir = "-salir";
+const char *ordenAyuda = "-ayuda";
 const char *ordenCambiarConversacion = "-cambiarConversacion";
 const char *ordenInvalida = "Orden Invalida";
 
