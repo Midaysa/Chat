@@ -40,3 +40,5 @@
 servidor/server
 cliente/client
 chat/chat
+executables/server
+executables/client
