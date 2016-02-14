@@ -3,11 +3,11 @@
 #include <time.h>               // sleep
 #include <fcntl.h>              // O_NONBLOCK, etc
 #include <stdio.h>              // printf
+#include <sys/queue.h>          // list macros
 #include <stdlib.h>             // malloc, free
 #include <stdbool.h>            // bool, true, false
 #include <unistd.h>             // unlink
 #include <string.h>             // strlen
-#include "../commons.h"             // strlen
 
 #define MSG_LEN 500
 #define STATUS_LEN 100
@@ -22,15 +22,17 @@ struct client {
     int in_fd, out_fd;
 } clients[N];
 
+int open_fifo(const char *fifo_name);
 void initialize();
 void sendMessage(char username[], char message[]);
 void write_full(char *token, char dst[]);
-char* searchUser(char username[]);
-void add_friend(struct client c, int friend_id);
-void delete_friend(struct client c, int friend_id);
+void add_friend(struct client *c, char username[]);
+void delete_friend(struct client *c, char username[]);
 void login(char username[], int in_fd, int out_fd);
 void logout(char username[]);
-int numberUsers = 0;
+void notify_friends(struct client c, char status[]);
+int get_id(char username[]);
+void print_array(int arr[]);
 
 
 /*
@@ -68,12 +70,10 @@ int main(int argc, char *argv[]) {
     int i, j;                   // variables de iteración simple
     char *token;
 
-    if (argc == 2)
-    {
+    if (argc == 2) {
         strcpy(server_pipe_name, argv[1]);
     }
-    else
-    {
+    else {
         strcpy(server_pipe_name, "/tmp/servidor");
     }
 
@@ -84,8 +84,7 @@ int main(int argc, char *argv[]) {
     tv.tv_usec = 0;
     initialize();
 
-    while (true)
-    {
+    while (true) {
         printf("escuchando conexiones...\n");
 
         FD_ZERO(&fdset);                // limpiar el set de pipes nominales
@@ -113,124 +112,79 @@ int main(int argc, char *argv[]) {
                 }
             }
         }
-        else if (rv > 0)
-        {              // existen archivos con datos para leer
+        else if (rv > 0) {              // existen archivos con datos para leer
             // si existe una nueva solicitud de conexion en el pipe 'fifo'
-            if(FD_ISSET(fifo, &fdset))
-            {
-            	printf("fifo ready to read!\n");
-
-                // agregar informacion del nuevo usuario al lista
-                // leer del pipe fifo los id's de los pipes del cliente
-
+            if(FD_ISSET(fifo, &fdset)) {
                 read(fifo, message, MSG_LEN);
-                printf("fifo was read!\n");
                 sscanf(message, "%s %s %s\n", username, out_file_name, in_file_name);
-                printf("%s %s %s\n", username, in_file_name, out_file_name);
+
+                //printf("%s %s %s\n", username, in_file_name, out_file_name);
                 close(fifo);
-
-                // Si encontramos a un usuario con el mismo nombre rechazamos la conexion
-                if (strcmp(searchUser(username),successMessage) == 0)
-                {
-                	write(out_fd, userNameNotAvaible, strlen(userNameNotAvaible));
-                }
-                else
-                {
-                    fifo = open_fifo(server_pipe_name);
-                    in_fd = open(in_file_name, O_RDONLY | O_NONBLOCK);
-                    out_fd = open(out_file_name, O_WRONLY | O_NONBLOCK);
-                    login(username, in_fd, out_fd);
-                    printf("login\n");
-                }
-
-
+                fifo = open_fifo(server_pipe_name);
+                in_fd = open(in_file_name, O_RDONLY | O_NONBLOCK);
+                out_fd = open(out_file_name, O_WRONLY | O_NONBLOCK);
+                login(username, in_fd, out_fd);
             }
 
-            for (i=0; i<N; i++)
-            {
-                if (FD_ISSET(clients[i].in_fd, &fdset))
-                {
+            for (i=0; i<N; i++) {
+                if (FD_ISSET(clients[i].in_fd, &fdset)) {
                     printf("comando recibido de |%s|\n", clients[i].username);
                     strcpy(message, "");
                     read(clients[i].in_fd, message, MSG_LEN);
                     printf("message = |%s|\n", message);
                     token = strtok(message, " ");      // token = primera palabra del comando
                     printf("token = |%s|\n", token);
-                    if (token == NULL)
-                    {
+                    if (token == NULL) {
                         printf("null token\n");
                         logout(clients[i].username);
                         continue;
                     }
-                    if (strcmp(token, "-estoy") == 0)
-                    {
+                    if (strcmp(token, "-estoy") == 0) {
                         token = strtok(NULL, " ");
                         write_full(token, message);
                         printf("client status = |%s|\n", message);
                         strcpy(clients[i].status, message);
+                        notify_friends(clients[i], message);
                     }
-                    else if (strcmp(token, "-quien") == 0)
-                    {
+                    else if (strcmp(token, "-quien") == 0) {
                         strcpy(message, "");
 
-                        if (strcmp(message, "") == 0)
-                        {
-                        	printf("message fue vaciado");
-                        }
-                        else
-                        {
-                        	printf("message = |%s|\n", message);
-                        }
-
-                        for (j=0; j<N; j++)
-                        {
-                            if (strlen(clients[j].username) > 0)
-                            {
-                            		printf("j = |%d|\n", j);
-                            		printf("clients[j].username = |%s|\n", clients[j].username);
-									strcat(message, clients[j].username);
-									strcat(message, ":");
-									printf("clients[j].status = |%s|\n", clients[j].status);
-									strcat(message, clients[j].status);
-									strcat(message, "\n");
+                        for (j=0; j<N; j++) {
+                            if (strlen(clients[j].username) > 0) {
+                                strcat(message, clients[j].username);
+                                strcat(message, ":");
+                                strcat(message, clients[j].status);
+                                strcat(message, "|");
                             }
                         }
-                        printf("i = |%d|\n", i);
-
                         write(clients[i].out_fd, message, MSG_LEN);
                     }
-                    else if (strcmp(token, "-escribir") == 0)
-                    {
+                    else if (strcmp(token, "-escribir") == 0) {
                         token = strtok(NULL, " ");
                         strcpy(username, token);
                         token = strtok(NULL, " ");
                         write_full(token, message);
-                        if (strcmp(searchUser(username),successMessage) == 0)
-                        {
-                            sprintf(tmp, "mensaje de %s: %s", clients[i].username, message);
-                            sendMessage(username, tmp);
-                        }
-                        else
-                        {
-                        	write(clients[i].out_fd, userNotFoundMessage, MSG_LEN);
-                        }
-
+                        sprintf(tmp, "mensaje de %s: %s", clients[i].username, message);
+                        sendMessage(username, tmp);
+                        add_friend(&clients[i], username);
+                        add_friend(&clients[get_id(username)], clients[i].username);
+                        //print_array(clients[i].friends);
+                        //print_array(clients[get_id(username)].friends);
+                        sleep(0.001);
                     }
-                    else if (strcmp(token, "-salir") == 0)
-                    {
+                    else if (strcmp(token, "-salir") == 0) {
                         printf("logging out\n");
+                        notify_friends(clients[i], "desconectado");
                         write(clients[i].out_fd, "-salir", MSG_LEN);
                         logout(clients[i].username);
                     }
                 }
-
             }
         }
         sleep(1);
 
         int i;
-        for (i=0;i<N;i++)
-        {
+        for (i=0;i<N;i++) {
             printf("%s, ", clients[i].username);
         }
 
@@ -240,7 +194,24 @@ int main(int argc, char *argv[]) {
 
     // FUNCIONES PARA REALIZAR DISTINTAS TAREAS DEL SERVIDOR
 
+// crea y abre el pipe nominal fifo_name
+// retorna el file descriptor del pipe creado
+int open_fifo(const char *fifo_name) {
+    int fifo;
 
+    // eliminar el pipe nominal creado en alguna otra ejecución del server
+    unlink(fifo_name);
+    // esperar 1 seg para que el SO lo elimine completamente
+    sleep(1);
+    // crear pipe (nominal) de conexiones nuevas
+    mkfifo(fifo_name, BASIC_PERMISSIONS | O_NONBLOCK);
+    // abrir el pipe para leer conexiones entrantes
+    fifo = open(fifo_name, O_RDONLY | O_NONBLOCK);
+
+    if (fifo == -1) perror("server mkfifo");
+
+    return fifo;
+}
 
 // Inicializa el arreglo de clientes
 void initialize() {
@@ -257,18 +228,12 @@ void initialize() {
     }
 }
 
-
-
 // Enviar mensaje al cliente indicado a través de su pipe
 void sendMessage(char username[], char message[]) {
     int i;
 
-    for (i=0; i<N; i++) {
-        if (strcmp(clients[i].username, username) == 0) {
-            write(clients[i].out_fd, message, strlen(message)+1);
-            break;
-        }
-    }
+    i = get_id(username);
+    write(clients[i].out_fd, message, strlen(message)+1);
 }
 
 // escribe lo que le sobra a token dentro de dst
@@ -286,44 +251,45 @@ void write_full(char *token, char dst[]) {
 }
 
 // Agregar amigo a la lista de amigos del cliente c
-void add_friend(struct client c, int friend_id) {
-    int i;
+void add_friend(struct client *c, char username[]) {
+    int i, friend_id;
+
+    friend_id = get_id(username);
 
     for (i=0; i<N; i++) {
-        if (c.friends[i] == -1) {
-            c.friends[i] = friend_id;
+        if (c->friends[i] == -1) {
+            printf("agregando a %s con id %d en los amigos de %s\n", username, friend_id, c->username);
+            c->friends[i] = friend_id;
+            break;
+        }
+        else if(strcmp(clients[c->friends[i]].username, username) == 0) break;
+    }
+}
+
+// Eliminar amigo de la lista de amigos del cliente c
+void delete_friend(struct client *c, char username[]) {
+    int i, friend_id;
+
+    friend_id = get_id(username);
+
+    for (i=0; i<N; i++) {
+        if (c->friends[i] == friend_id) {
+            c->friends[i] = -1;
             break;
         }
     }
 }
 
-// Eliminar amigo de la lista de amigos del cliente c
-void delete_friend(struct client c, int friend_id) {
-    int i, j;
-
-    for (i=0; i<N; i++) {
-        if (c.friends[i] == friend_id) {
-            c.friends[i] = -1;
-        }
-    }
-}
-
-// Busca a un usuario en la lista de usuarios del servidor
-char* searchUser(char username[])
-{
+// Retorna la posición del arreglo en donde se encuentra el usuario
+// Retorna -1 si no lo encuentra
+int get_id(char username[]) {
     int i;
-    char message[MSG_LEN];
-
-    for (i=0; i<N; i++)
-    {
-        if (strcmp(username,clients[i].username) == 0)
-        {
-        	printf("User Found");
-        	return successMessage;
-        }
-    }
-    printf("User Not Found");
-    return userNotFoundMessage;
+    
+    for (i=0; i<N; i++) 
+        if (strcmp(clients[i].username, username) == 0) 
+            return i;
+    
+    return -1;
 }
 
 // Registrar los datos y pipes del usuario
@@ -331,67 +297,50 @@ void login(char username[], int in_fd, int out_fd) {
     int i;
 
     for (i=0; i<N; i++) {
-        if (strcmp(clients[i].username, "") == 0)
-        {
-        	printf("Logre el login \n");
+        if (strcmp(clients[i].username, "") == 0) {
             strcpy(clients[i].username, username);
-            strcpy(clients[i].status, defaultStatus);
+            strcpy(clients[i].status, "");
             clients[i].in_fd = in_fd;
             clients[i].out_fd = out_fd;
-            printf("Login: %d %s %s %d %d \n",i,clients[i].username,clients[i].status,clients[i].in_fd,clients[i].out_fd);
             break;
         }
     }
-    write(out_fd, successMessage, strlen(successMessage));
 }
 
 // Eliminar al usuario de todas las listas de amigos y vaciar sus datos
 void logout(char username[]) {
     int i, j, friend_id;
+    
+    i = get_id(username);
+    strcpy(clients[i].username, "");
+    strcpy(clients[i].status, "");
+    close(clients[i].in_fd);
+    close(clients[i].out_fd);
+    clients[i].in_fd = 0;
+    clients[i].out_fd = 0;
+    
+    for (j=0; j<N; j++) {
+        friend_id = clients[i].friends[j];
+        delete_friend(&clients[friend_id], clients[i].username);
+        clients[i].friends[j] = -1;
+    }
+}
 
-    for(i=0; i<numberUsers; i++)
-    {
-        if (strcmp(clients[i].username, username) == 0)
+// Enviar un mensaje a los contactos que se encuentran hablando con el usuario
+// indicandoles un cambio de estado del mismo (desconectado, custom)
+void notify_friends(struct client c, char status[]) {
+    char message[MSG_LEN] = "";
+    int i;
+    
+    sprintf(message, "%s ha cambiado de estado a: %s", c.username, status);
+    
+    for (i=0; i<N; i++) {
+        if (c.friends[i] != -1)
         {
-            strcpy(clients[i].username, "");
-            strcpy(clients[i].status, "");
-            close(clients[i].in_fd);
-            close(clients[i].out_fd);
-            clients[i].in_fd = 0;
-            clients[i].out_fd = 0;
-
-            for (j=0; j<N; j++) {
-                friend_id = clients[i].friends[j];
-                delete_friend(clients[friend_id], i);
-                clients[i].friends[j] = -1;
-            }
-            break;
+            printf("Notificando a %s: %s\n", clients[c.friends[i]].username, message);
+            sendMessage(clients[c.friends[i]].username, message);
         }
     }
-    printf("%s %s\n",username,LogOutServerMessage);
 }
 
-/*char status(char username[], int in_fd) {
-    char status[MSG_LEN];
-
-    status = read(in_fd, message, MSG_LEN);
-    strcpy(clients.username, status);
-}*/
-
-// Toma la primera palabra de un arreglo
-char split_first(char str[], char first[], char second[]) {
-    int i, j, len=strlen(str);
-
-    for (i=0; i<len; i++) {
-        if (str[i] == ' ') break;
-        else first[i] = str[i];
-    }
-
-    first[i++] = 0;
-
-    for (j=0; i<len; i++, j++)
-        second[j] = str[i];
-
-    second[j] = 0;
-    return second[j];
-}
+void print_array(int arr[]) {int i; for (i=0; i<N; i++) printf("%d ", arr[i]); printf("\n"); }

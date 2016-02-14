@@ -262,6 +262,8 @@ int main(int argc, char *argv[])
 					// extraer destinatario y pegarlo en dest
 					token = strtok(NULL, " ");
 					strcpy(dest, token);
+					sprintf(command, "-cambiarConversacion %s ", dest);
+					write(out_fd, command, MSG_LEN);
 				}
 				else if (strcmp(token, "-salir") == 0) {
 					write(out_fd, command, MSG_LEN);
