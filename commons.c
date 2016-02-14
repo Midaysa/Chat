@@ -36,7 +36,10 @@ const char *whoOrder = "whoOrder";
 const char *writeToOrder = "writeToOrder";
 const char *statusOrder = "statusOrder";
 const char *logOutOrder = "logOutOrder";
+
 const char *successMessage = "Operation Successfull";
+const char *userNotFoundMessage = "The user you want to write to it's not connected";
+const char *userNameNotAvaible = "The Username you entered it's already in use, try to login with a different one";
 
 char* getErrorMessage(const char* errorMessage,int line, char* file)
 

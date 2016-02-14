@@ -25,6 +25,7 @@ struct client {
 void initialize();
 void sendMessage(char username[], char message[]);
 void write_full(char *token, char dst[]);
+char* searchUser(char username[]);
 void add_friend(struct client c, int friend_id);
 void delete_friend(struct client c, int friend_id);
 void login(char username[], int in_fd, int out_fd);
@@ -127,11 +128,22 @@ int main(int argc, char *argv[]) {
                 sscanf(message, "%s %s %s\n", username, out_file_name, in_file_name);
                 printf("%s %s %s\n", username, in_file_name, out_file_name);
                 close(fifo);
-                fifo = open_fifo(server_pipe_name);
-                in_fd = open(in_file_name, O_RDONLY | O_NONBLOCK);
-                out_fd = open(out_file_name, O_WRONLY | O_NONBLOCK);
-                login(username, in_fd, out_fd);
-                printf("login\n");
+
+                // Si encontramos a un usuario con el mismo nombre rechazamos la conexion
+                if (strcmp(searchUser(username),successMessage) == 0)
+                {
+                	write(out_fd, userNameNotAvaible, strlen(userNameNotAvaible));
+                }
+                else
+                {
+                    fifo = open_fifo(server_pipe_name);
+                    in_fd = open(in_file_name, O_RDONLY | O_NONBLOCK);
+                    out_fd = open(out_file_name, O_WRONLY | O_NONBLOCK);
+                    login(username, in_fd, out_fd);
+                    printf("login\n");
+                }
+
+
             }
 
             for (i=0; i<N; i++)
@@ -193,8 +205,16 @@ int main(int argc, char *argv[]) {
                         strcpy(username, token);
                         token = strtok(NULL, " ");
                         write_full(token, message);
-                        sprintf(tmp, "mensaje de %s: %s", clients[i].username, message);
-                        sendMessage(username, tmp);
+                        if (strcmp(searchUser(username),successMessage) == 0)
+                        {
+                            sprintf(tmp, "mensaje de %s: %s", clients[i].username, message);
+                            sendMessage(username, tmp);
+                        }
+                        else
+                        {
+                        	write(clients[i].out_fd, userNotFoundMessage, MSG_LEN);
+                        }
+
                     }
                     else if (strcmp(token, "-salir") == 0)
                     {
@@ -288,6 +308,24 @@ void delete_friend(struct client c, int friend_id) {
     }
 }
 
+// Busca a un usuario en la lista de usuarios del servidor
+char* searchUser(char username[])
+{
+    int i;
+    char message[MSG_LEN];
+
+    for (i=0; i<N; i++)
+    {
+        if (strcmp(username,clients[i].username) == 0)
+        {
+        	printf("User Found");
+        	return successMessage;
+        }
+    }
+    printf("User Not Found");
+    return userNotFoundMessage;
+}
+
 // Registrar los datos y pipes del usuario
 void login(char username[], int in_fd, int out_fd) {
     int i;
@@ -311,7 +349,8 @@ void login(char username[], int in_fd, int out_fd) {
 void logout(char username[]) {
     int i, j, friend_id;
 
-    for(i=0; i<numberUsers; i++) {
+    for(i=0; i<numberUsers; i++)
+    {
         if (strcmp(clients[i].username, username) == 0)
         {
             strcpy(clients[i].username, "");
@@ -329,6 +368,7 @@ void logout(char username[]) {
             break;
         }
     }
+    printf("%s %s\n",username,LogOutServerMessage);
 }
 
 /*char status(char username[], int in_fd) {

@@ -159,6 +159,16 @@ int main(int argc, char *argv[])
     close(in_fd);
     wprintw(ventana1,"Respuesta del servidor: %s \n", message);
     wrefresh(ventana1);
+
+    if (strcmp(message,userNameNotAvaible) == 0)
+	{
+        unlink(out_file_name);
+        unlink(in_file_name);
+        endwin(); // Restaurar la operaci�n del terminal a modo normal
+        printf("%s\n",userNameNotAvaible);
+        exit(0);
+	}
+
     strcpy(dest, "");
 
 	wprintw(ventana1, "--------- Mega Servicio De Chat! Bienvenido! ---------\n \n");
@@ -289,6 +299,7 @@ int main(int argc, char *argv[])
     unlink(out_file_name);
     close(in_fd);
     unlink(in_file_name);
+    endwin(); // Restaurar la operaci�n del terminal a modo normal
     exit(0);
 }
 
@@ -325,7 +336,8 @@ void limpiarVentana2() {
     wrefresh(ventana2);
 }
 
-void sigintHandler(int dummy) {
+void sigintHandler(int dummy)
+{
     endwin(); // Restaurar la operaci�n del terminal a modo normal
     exit(0);
 }

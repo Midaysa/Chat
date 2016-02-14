@@ -32,6 +32,9 @@ extern const char *writeToOrder;
 extern const char *statusOrder;
 extern const char *logOutOrder;
 
+extern const char *userNotFoundMessage;
+extern const char *userNameNotAvaible;
+
 // ESTRUCTURAS
 
 // --Client--
