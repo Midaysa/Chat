@@ -2,6 +2,7 @@
 #include <fcntl.h>              // O_NONBLOCK, etc
 #include <stdio.h>              // printf
 #include <sys/queue.h>          // list macros
+#include <sys/select.h>         // select
 #include <stdlib.h>             // malloc, free
 #include <stdbool.h>            // bool, true, false
 #include <string.h>             // strlen
@@ -18,6 +19,7 @@
 #define COLS_MIN 25 // Ancho m�nimo que debe tener el terminal
 #define TECLA_RETURN 0xD
 #define TAM 2048 // Tama�o de buffer
+#define WAIT 3
 
 WINDOW *ventana1, *ventana2;
 
@@ -28,30 +30,39 @@ void sigintHandler(int dummy);
 
 
 /* Hay que permitir que se le pasen argumentos al cliente */
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     int len;
-    char in_file_name[NAME_LEN], out_file_name[NAME_LEN];  // nombre de los
-                                               //pipes de entrada
-                                               // y salida de cada usuario
-    int fifo;                                  // pipe "servidor" para
-                                               // solicitar una nueva conexion
-    int in_fd, out_fd;                         // pipes de entrada/salida
-    int r;                                     // numero random entre
-                                               // 1000000000 y 2000000000-1
+    char in_file_name[NAME_LEN];
+    char out_file_name[NAME_LEN];  // nombre de los
+								   //pipes de entrada
+								   // y salida de cada usuario
+    int fifo;                              // pipe "servidor" para
+										   // solicitar una nueva conexion
+    int in_fd;						// pipes de entrada
+    int out_fd;                     // pipes de salida
     char server_pipe_name[NAME_LEN];
     char username[NAME_LEN];
-    char command[MSG_LEN], first[MSG_LEN], second[MSG_LEN], message[MSG_LEN],
-             dest[NAME_LEN], *token;
+    char command[MSG_LEN];
+	char first[MSG_LEN];
+	char second[MSG_LEN];
+	char message[MSG_LEN];
+	char dest[NAME_LEN];
+	char*token;
+	int alto1; // Alto de la ventana 1
 
-    signal(SIGINT, sigintHandler); // Activamos el manejador de interrupciones
+	int    fd_stdin;	// identificador del pipe de stdin
+	fd_set readfds;	// fd_set para la entrada de datos
+	struct timeval timeoutInput;	// Estructura para definir el timeout
+	int    num_readable;	// Variable que indica si hay datos en el pipe de entrada
 
     srand(time(NULL));                         // inicializa semilla del random
 
 
 	if (argc == 1)
 	{
-		strcpy(username, "System");
-		strcpy(server_pipe_name, "/tmp/servidor");
+		strcpy(username, defaultUsername);
+		strcpy(server_pipe_name, defaultServer);
 	}
 
 	else if (argc > 1 && argc <= 4)
@@ -70,7 +81,7 @@ int main(int argc, char *argv[]) {
 				// Si no recibo otro argumento entonces es el usuario del sistema
 				else
 				{
-					strcpy(username, "System");
+					strcpy(username, defaultUsername);
 				}
 			}
 
@@ -78,7 +89,7 @@ int main(int argc, char *argv[]) {
 			else
 			{
 				// Si no defino nombre de servidor, escogo el nombre por defecto
-				strcpy(server_pipe_name, "/tmp/servidor");
+				strcpy(server_pipe_name, defaultServer);
 
 				// Recibo un usuario
 				if (argc == 2)
@@ -106,7 +117,7 @@ int main(int argc, char *argv[]) {
 
     if (LINES < LINES_MIN || COLS < COLS_MIN) {
         endwin(); // Restaurar la operaci�n del terminal a modo normal
-        printf("El terminal es muy peque�o para correr este programa.\n");
+        printf(termSizeError);
         exit(0);
     }
 
@@ -114,7 +125,7 @@ int main(int argc, char *argv[]) {
     cbreak();
     nonl();
 
-    int alto1 = LINES - ALTO; // Alto de la ventana 1
+    alto1 = LINES - ALTO;
     ventana1 = newwin(alto1, 0, 0, 0); // Crear la ventana 1
     ventana2 = newwin(ALTO, 0, alto1, 0); // Crear la ventana 2
     scrollok(ventana1, TRUE); //Activar el corrimiento autom�tico en la ventana 1
@@ -126,22 +137,14 @@ int main(int argc, char *argv[]) {
     strcat(in_file_name, "_in");
     strcat(out_file_name, "_out");
 
-    // message = in_file_name + ' ' + out_file_name
-    wprintw(ventana1,"username = %s, in_file_name = %s, out_file_name = %s\n", username, in_file_name, out_file_name);
-    wrefresh(ventana1);
-
     // abrir el pipe publico de conexiones nuevas del servidor
     fifo = open(server_pipe_name, O_WRONLY);
-    wprintw(ventana1,"server_pipe_name = %s\n", server_pipe_name);
-    wrefresh(ventana1);
-
-    if (fifo == -1) perror("open(server_pipe_name)");
+    if (fifo == -1) perror(getErrorMessage(openError,__LINE__,__FILE__));
 
     // crear pipe (nominal) de entrada
     mkfifo(in_file_name, BASIC_PERMISSIONS, O_NONBLOCK);
     // crear pipe (nominal) de salida
     mkfifo(out_file_name, BASIC_PERMISSIONS | O_NONBLOCK);
-
 
 
     sprintf(message, "%s %s %s\n", username, in_file_name, out_file_name);
@@ -151,99 +154,183 @@ int main(int argc, char *argv[]) {
 
 
     strcpy(message, "");
+
     in_fd = open(in_file_name, O_RDONLY);      // abrir el pipe para leer datos
+    if (in_fd == -1) perror(getErrorMessage(openError,__LINE__,__FILE__));
+
     read(in_fd, message, MSG_LEN);
     close(in_fd);
-    wprintw(ventana1,"Respuesta del servidor: %s \n", message);
+    wprintw(ventana1,"%s %s \n", loginResultMessage,message);
     wrefresh(ventana1);
+
+    if (strcmp(message,userNameNotAvaible) == 0)
+	{
+        unlink(out_file_name);
+        unlink(in_file_name);
+        endwin(); // Restaurar la operaci�n del terminal a modo normal
+        printf("%s\n",userNameNotAvaible);
+        exit(0);
+	}
+
     strcpy(dest, "");
 
-	wprintw(ventana1, "--------- Mega Servicio De Chat! Bienvenido! ---------\n \n");
+	wprintw(ventana1, welcomeMessage);
 	wrefresh(ventana1);
+
+
+	fd_stdin = fileno(stdin);
 
 
 	while(true)
 	{
-        char buffer[TAM];
-
 
         in_fd = open(in_file_name, O_RDONLY | O_NONBLOCK);      // abrir el pipe para leer datos
+        if (in_fd == -1) perror(getErrorMessage(openError,__LINE__,__FILE__));
+
         strcpy(message, "");
         read(in_fd, message, MSG_LEN);
-        close(in_fd);
+        //close(in_fd);
         if (strcmp(message, "") != 0)
         {
-        	wprintw(ventana1,"Respuesta del servidor: %s\n", message);
+        	wprintw(ventana1,"%s\n", message);
         }
 
         wrefresh(ventana1);
-
 
         out_fd = open(out_file_name, O_WRONLY);  // abrir el pipe para enviar datos
+        if (out_fd == -1) perror(getErrorMessage(openError,__LINE__,__FILE__));
         enfocarVentana2();
-        wgetnstr(ventana2, command, MSG_LEN); // Leer una l�nea de la entrada
-        command[strlen(command)-1] = 0;          // sustituir \n por \0 al final
-        token = strtok(command, " ");      // token = primera palabra del comando
-        wprintw(ventana1,"command = |%s| token = |%s|\n", command, token);
 
-		// Si No Se ha definido el usuario al escribir
-		if (dest == "")
-		{
-			wprintw(ventana1, "%s: %s\n", in_file_name,command);
+
+        FD_ZERO(&readfds);
+        FD_SET(fd_stdin, &readfds);
+
+        /* Waiting for some seconds */
+        timeoutInput.tv_sec = WAIT;    // WAIT seconds
+        timeoutInput.tv_usec = 0;    // 0 milliseconds
+
+        enfocarVentana2();
+        num_readable = select(fd_stdin + 1, &readfds, NULL, NULL, &timeoutInput);
+
+        if (num_readable == -1)
+        {
+
+			fprintf(stderr, getErrorMessage(selectError,__LINE__, __FILE__));
+			exit(1);
 		}
-		// Si Se ha definido el usuario al escribir
+        else if (num_readable == 0)
+        {
+			close(out_fd);
+			wrefresh(ventana1);
+			continue;
+		}
 		else
 		{
-			wprintw(ventana1, "%s -> %s: %s\n", username,dest,command);
+			// Pedimos la entrada del usuario
+			wgetnstr(ventana2, command, MSG_LEN); // Leer una l�nea de la entrada
+
+			// Permitimos el enter para evitar un segmentation fault
+			if (strcmp(command,"") == 0)
+			{
+				continue;
+			}
+
+			command[strlen(command)] = 0;          // sustituir \n por \0 al final
+
+			// Si No Se ha definido el usuario al escribir
+			if (dest == "")
+			{
+				wprintw(ventana1, "%s: %s\n", in_file_name,command);
+			}
+			// Si Se ha definido el usuario al escribir
+			else
+			{
+				wprintw(ventana1, "%s -> %s: %s\n", username,dest,command);
+			}
+
+			token = strtok(command, " ");      // token = primera palabra del comando
+			wrefresh(ventana1);
+
+			// Caso 1: Commando
+
+			if (token[0] == '-')
+			{
+				// Caso 1.1: Cambiar Estado
+				if (strcmp(token, ordenEstoy) == 0)
+				{
+					write_full(token, command);
+					write(out_fd, command, MSG_LEN);
+					// mostrar en algun label de la GUI este estado
+				}
+
+				// Caso 1.2: Pedir a servidor la lista de usuarios
+				else if (strcmp(token, ordenQuien) == 0)
+				{
+					write(out_fd, command, MSG_LEN);
+				}
+
+				// Caso 1.3: Cambiar conversacion
+				else if (strcmp(token, ordenEscribir) == 0)
+				{
+					// extraer destinatario y pegarlo en dest
+					token = strtok(NULL, " ");
+					strcpy(dest, token);
+
+					if (strcmp(dest, username) == 0)
+					{
+						wprintw(ventana1, writeToMySelf);
+					}
+
+					else
+					{
+						sprintf(command, "%s %s", ordenCambiarConversacion,dest);
+						write(out_fd, command, MSG_LEN);
+					}
+				}
+
+				// Caso 1.4: Cierre de Sesion
+				else if (strcmp(token, ordenSalir) == 0)
+				{
+					write(out_fd, command, MSG_LEN);
+					sleep(1);
+					break;
+				}
+
+				// Caso 1.5: Cierre de Sesion
+				else if (strcmp(token, ordenAyuda) == 0)
+				{
+					displayCommandList();
+				}
+
+				// Caso 1.6: Orden Invalida
+				else
+				{
+					wprintw(ventana1, "%s\n",ordenInvalida);
+				}
+			}
+
+			// Caso 2: Mensaje a enviar
+			else
+			{
+				// Si no hay conversacion selecionada rechazamos el mensaje
+				if (strcmp(dest,"") == 0)
+				{
+					wprintw(ventana1, noUserSelectedMessage);
+				}
+				// Si hay conversacion seleccionada enviamos el mensaje
+				else
+				{
+					sprintf(message, "%s %s ",ordenEscribir, dest);
+					write_full(token, command);
+					strcat(message, command);
+					write(out_fd, message, MSG_LEN);
+				}
+			}
+			close(out_fd);
+
+			wrefresh(ventana1);
+			limpiarVentana2();
 		}
-
-		//
-
-		if (token[0] == '-')
-		{
-			if (strcmp(token, "-estoy") == 0) {
-	            write_full(token, command);
-	            printf("command = |%s|\n", command);
-	            write(out_fd, command, MSG_LEN);
-	            // mostrar en algun label de la GUI este estado
-			}
-			else if (strcmp(token, "-quien") == 0) {
-	            write(out_fd, command, MSG_LEN);
-			}
-			else if (strcmp(token, "-escribir") == 0) {
-	            // extraer destinatario y pegarlo en dest
-	            token = strtok(NULL, " ");
-	            strcpy(dest, token);
-			}
-			else if (strcmp(token, "-salir") == 0) {
-	            write(out_fd, command, MSG_LEN);
-	            sleep(1);
-	            break;
-			}
-	        else
-	        {
-	        	wprintw(ventana1, "Orden Invalida\n");
-	        }
-		}
-        else
-        {
-        	if (strcmp(dest,"") == 0)
-        	{
-        		wprintw(ventana1, "No le esta escribiendo a ningun usuario!\n");
-        	}
-        	else
-        	{
-                sprintf(message, "-escribir %s ", dest);
-                write_full(token, command);
-                strcat(message, command);
-                write(out_fd, message, MSG_LEN);
-        	}
-        }
-        close(out_fd);
-
-        wrefresh(ventana1);
-        limpiarVentana2();
-
 	}
 
     close(out_fd);
@@ -251,6 +338,7 @@ int main(int argc, char *argv[]) {
     unlink(out_file_name);
     close(in_fd);
     unlink(in_file_name);
+    endwin(); // Restaurar la operaci�n del terminal a modo normal
     exit(0);
 }
 
@@ -287,7 +375,14 @@ void limpiarVentana2() {
     wrefresh(ventana2);
 }
 
-void sigintHandler(int dummy) {
+void sigintHandler(int dummy)
+{
     endwin(); // Restaurar la operaci�n del terminal a modo normal
     exit(0);
+}
+
+void displayCommandList()
+{
+	wprintw(ventana1, helpMenu);
+	wrefresh(ventana2);
 }
