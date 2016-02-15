@@ -22,7 +22,6 @@ struct client {
     int in_fd, out_fd;
 } clients[N];
 
-int open_fifo(const char *fifo_name);
 void initialize();
 void sendMessage(char username[], char message[]);
 void write_full(char *token, char dst[]);
@@ -194,24 +193,7 @@ int main(int argc, char *argv[]) {
 
     // FUNCIONES PARA REALIZAR DISTINTAS TAREAS DEL SERVIDOR
 
-// crea y abre el pipe nominal fifo_name
-// retorna el file descriptor del pipe creado
-int open_fifo(const char *fifo_name) {
-    int fifo;
 
-    // eliminar el pipe nominal creado en alguna otra ejecución del server
-    unlink(fifo_name);
-    // esperar 1 seg para que el SO lo elimine completamente
-    sleep(1);
-    // crear pipe (nominal) de conexiones nuevas
-    mkfifo(fifo_name, BASIC_PERMISSIONS | O_NONBLOCK);
-    // abrir el pipe para leer conexiones entrantes
-    fifo = open(fifo_name, O_RDONLY | O_NONBLOCK);
-
-    if (fifo == -1) perror("server mkfifo");
-
-    return fifo;
-}
 
 // Inicializa el arreglo de clientes
 void initialize() {

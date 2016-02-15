@@ -27,6 +27,7 @@ void enfocarVentana2();
 void limpiarVentana2();
 void write_full(char *token, char dst[]);
 void sigintHandler(int dummy);
+void displayCommandList();
 
 
 /* Hay que permitir que se le pasen argumentos al cliente */
@@ -117,7 +118,7 @@ int main(int argc, char *argv[])
 
     if (LINES < LINES_MIN || COLS < COLS_MIN) {
         endwin(); // Restaurar la operaci�n del terminal a modo normal
-        printf(termSizeError);
+        printf("%s\n",termSizeError);
         exit(0);
     }
 
@@ -214,9 +215,7 @@ int main(int argc, char *argv[])
 
         if (num_readable == -1)
         {
-
-			fprintf(stderr, getErrorMessage(selectError,__LINE__, __FILE__));
-			exit(1);
+        	perror(getErrorMessage(selectError,__LINE__, __FILE__));
 		}
         else if (num_readable == 0)
         {
