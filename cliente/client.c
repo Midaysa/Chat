@@ -23,6 +23,7 @@
 
 WINDOW *ventana1, *ventana2;
 
+void displayCommandList();
 void enfocarVentana2();
 void limpiarVentana2();
 void write_full(char *token, char dst[]);
@@ -117,7 +118,7 @@ int main(int argc, char *argv[])
 
     if (LINES < LINES_MIN || COLS < COLS_MIN) {
         endwin(); // Restaurar la operaci�n del terminal a modo normal
-        printf(termSizeError);
+        perror(getErrorMessage(termSizeError,__LINE__,__FILE__));
         exit(0);
     }
 
@@ -174,7 +175,7 @@ int main(int argc, char *argv[])
 
     strcpy(dest, "");
 
-	wprintw(ventana1, welcomeMessage);
+	wprintw(ventana1, "%s\n" ,welcomeMessage);
 	wrefresh(ventana1);
 
 
@@ -189,7 +190,6 @@ int main(int argc, char *argv[])
 
         strcpy(message, "");
         read(in_fd, message, MSG_LEN);
-        //close(in_fd);
         if (strcmp(message, "") != 0)
         {
         	wprintw(ventana1,"%s\n", message);
@@ -214,8 +214,7 @@ int main(int argc, char *argv[])
 
         if (num_readable == -1)
         {
-
-			fprintf(stderr, getErrorMessage(selectError,__LINE__, __FILE__));
+			perror(getErrorMessage(selectError,__LINE__, __FILE__));
 			exit(1);
 		}
         else if (num_readable == 0)
@@ -232,6 +231,8 @@ int main(int argc, char *argv[])
 			// Permitimos el enter para evitar un segmentation fault
 			if (strcmp(command,"") == 0)
 			{
+				wrefresh(ventana1);
+				limpiarVentana2();
 				continue;
 			}
 
@@ -278,7 +279,7 @@ int main(int argc, char *argv[])
 
 					if (strcmp(dest, username) == 0)
 					{
-						wprintw(ventana1, writeToMySelf);
+						wprintw(ventana1, "%s\n" ,writeToMySelf);
 					}
 
 					else

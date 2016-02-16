@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
         strcpy(server_pipe_name, defaultServer);
     }
 
-    printf(serverStartMessage);
+    printf("%s\n",serverStartMessage);
 
     fifo = open_fifo(server_pipe_name);
     tv.tv_sec = 1;                  // 1 seg de timeout con 0 microsegs
@@ -170,7 +170,7 @@ int main(int argc, char *argv[]) {
                     {
                         strcpy(message, "");
 
-                        strcat(message, "Usuarios Conectados \n\n");
+                        strcat(message, "\nUsuarios Conectados \n\n");
 
                         for (j=0; j<N; j++)
                         {
@@ -223,8 +223,6 @@ int main(int argc, char *argv[]) {
                     }
                     else if (strcmp(token, ordenSalir) == 0)
                     {
-                        printf("logging out\n");
-                        //write(clients[i].out_fd, "-salir", MSG_LEN);
                         logout(clients[i].username);
                     }
                 }

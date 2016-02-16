@@ -10,7 +10,7 @@
 
 #define MSG_LEN 500
 #define BASIC_PERMISSIONS 0666
-#define N 100
+#define N 20
 
 // CONSTANTES
 
