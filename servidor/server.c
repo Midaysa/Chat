@@ -1,3 +1,13 @@
+/*
+ * server.c
+ *
+ *	Programa del servidor que se encargara de recibir datos de los clientes que se conecten a el y distribuirlos de
+ *	manera automatizada
+ *
+ *  Created on: Jan 18, 2016
+ *      Author: francisco y midaysa
+ */
+
 #include <sys/select.h>         // select
 #include <sys/stat.h>           // mkfifo
 #include <time.h>               // sleep
@@ -8,14 +18,14 @@
 #include <unistd.h>             // unlink
 #include <string.h>             // strlen
 #include <signal.h>				// Signal
-#include "../commons.h"             // strlen
+#include "../commons.h"         // Mensajes De Error y funciones comunes
 
 #define MSG_LEN 500
 #define STATUS_LEN 100
 #define BASIC_PERMISSIONS 0666
 #define N 20
 
-// crear contenedor de usuarios
+/* Estructura de datos que contiene todos los datos de un usuario que se haya registrado en el servidor */
 struct client {
     char username[30];
 	char status[140];
@@ -31,37 +41,37 @@ void login(char username[], int in_fd, int out_fd);
 void logout(char username[]);
 static void sigkillHandler(int signo);
 
-int fifo;                   // fd del pipe del servidor
-char server_pipe_name[100]; // nombre del pipe nominal del servidor
+int fifo;                   			// fd del pipe del servidor
+char server_pipe_name[100]; 			// nombre del pipe nominal del servidor
 
 int main(int argc, char *argv[]) {
-    struct timeval tv;          // estructura para indicar el timeout de select
-    int n;                      // 1 + file descriptor mas alto
-    int rv;                     // return value del select, sirve para saber si
-                                // retornó algo útil (>0),
-                                // si hubo error (-1) o si hubo timeout (0)
-    char message[MSG_LEN];      // string de datos enviados desde los clientes
-                                // al servidor y viceversa
-    char tmp[MSG_LEN];          // string temporal para agregar origen de mensaje
-    fd_set fdset, error_fdset;  // crear sets de pipes nominales
-    char in_file_name[11],     	// nombre de los pipes de entrada
+    struct timeval tv;          		// estructura para indicar el timeout de select
+    int n;                      		// 1 + file descriptor mas alto
+    int rv;                     		// return value del select, sirve para saber si
+                                		// retornó algo útil (>0),
+                                		// si hubo error (-1) o si hubo timeout (0)
+    char message[MSG_LEN];      		// string de datos enviados desde los clientes
+                                		// al servidor y viceversa
+    char tmp[MSG_LEN];          		// string temporal para agregar origen de mensaje
+    fd_set fdset, error_fdset;  		// crear sets de pipes nominales
+    char in_file_name[11],     			// nombre de los pipes de entrada
          out_file_name[11];
-    int in_fd, out_fd;          // file descriptors temporales para clientes
-    char username[30];          // nombre temporal para clientes
-    int i, j;                   // variables de iteración simple
-    char *token;				// Variable usada para guardar las palabras separadas del
-    							// input del usuario
-    signal(SIGPIPE, SIG_IGN);	// Manejador de senales para SIGPIPE
-	signal(SIGINT, sigkillHandler);	// Manejador de senales para SIGINT
+    int in_fd, out_fd;          		// file descriptors temporales para clientes
+    char username[30];          		// nombre temporal para clientes
+    int i, j;                   		// variables de iteración simple
+    char *token;						// Variable usada para guardar las palabras separadas del
+    									// input del usuario
+    signal(SIGPIPE, SIG_IGN);			// Manejador de senales para SIGPIPE
+	signal(SIGINT, sigkillHandler);		// Manejador de senales para SIGINT
 	signal(SIGABRT, sigkillHandler);	// Manejador de senales para SIGINT
 	signal(SIGTERM, sigkillHandler);	// Manejador de senales para SIGINT
 
-    // Si se dio un nombre de server lo guardamos
+    /* Si se dio un nombre de server lo guardamos */
     if (argc == 2)
     {
         strcpy(server_pipe_name, argv[1]);
     }
-    // Sino usamos el nombre por defecto
+    /* Sino usamos el nombre por defecto */
     else
     {
         strcpy(server_pipe_name, defaultServer);
@@ -71,10 +81,11 @@ int main(int argc, char *argv[]) {
 
     fifo = openFifo(server_pipe_name);
     if (fifo == -1) perror(getErrorMessage(openError,__LINE__,__FILE__));
-    tv.tv_sec = 1;                  // 1 seg de timeout con 0 microsegs
+    tv.tv_sec = 1;                  	// 1 seg de timeout con 0 microsegs
     tv.tv_usec = 0;
     initialize();
 
+    /* Ciclo Principal */
     while (true)
     {
         FD_ZERO(&fdset);                // limpiar el set de pipes nominales
@@ -86,7 +97,7 @@ int main(int argc, char *argv[]) {
 
         for (i=0; i<N; i++)
         {
-        	// agregar pipes de todos los usuarios al fd_set
+        	/* agregar pipes de todos los usuarios al fd_set */
             if (strlen(clients[i].username) > 0)
             {
                 FD_SET(clients[i].in_fd, &fdset);
@@ -110,18 +121,17 @@ int main(int argc, char *argv[]) {
         }
         else if (rv > 0)
         {
-        	// existen archivos con datos para leer
-            // si existe una nueva solicitud de conexion en el pipe 'fifo'
+        	/* existen archivos con datos para leer
+               si existe una nueva solicitud de conexion en el pipe 'fifo' */
             if(FD_ISSET(fifo, &fdset))
             {
-                // agregar informacion del nuevo usuario al lista
-                // leer del pipe fifo los id's de los pipes del cliente
-
+                /* agregar informacion del nuevo usuario al lista
+                   leer del pipe fifo los id's de los pipes del cliente */
                 read(fifo, message, MSG_LEN);
                 sscanf(message, "%s %s %s\n", username, out_file_name, in_file_name);
                 close(fifo);
 
-                // Si encontramos a un usuario con el mismo nombre rechazamos la conexion
+                /* Si encontramos a un usuario con el mismo nombre rechazamos la conexion */
                 if (strcmp(searchUser(username),successMessage) == 0)
                 {
                 	write(out_fd, userNameNotAvaible, strlen(userNameNotAvaible));
@@ -133,41 +143,34 @@ int main(int argc, char *argv[]) {
                     out_fd = open(out_file_name, O_WRONLY | O_NONBLOCK);
                     login(username, in_fd, out_fd);
                 }
-
-
             }
-            // Recorremos el set de pipes
+            /* Recorremos el set de pipes */
             for (i=0; i<N; i++)
             {
-            	// Se recibio input de parte del usuario
+            	/* Se recibio input de parte del usuario */
                 if (FD_ISSET(clients[i].in_fd, &fdset))
                 {
-                    //printf("comando recibido de |%s|\n", clients[i].username);
                     strcpy(message, "");
                     read(clients[i].in_fd, message, MSG_LEN);
-                    //printf("message = |%s|\n", message);
                     token = strtok(message, " ");      // token = primera palabra del comando
-                    //printf("token = |%s|\n", token);
 
-                    // Detectamos si el usuario no esta en linea
+                    /* Detectamos si el usuario no esta en linea */
                     if (token == NULL && strcmp(clients[i].username,"") != 0)
                     {
-                        //printf("null token\n");
                         logout(clients[i].username);
                         continue;
                     }
 
-                    // Cambio de estado
+                    /* Cambio de estado */
                     if (strcmp(token, ordenEstoy) == 0)
                     {
 						token = strtok(NULL, " ");
 						writeFull(token, message);
-						//printf("client status = |%s|\n", message);
 						strcpy(clients[i].status, message);
 
 						sprintf(message, "%s ha cambiado de estado a: %s", clients[i].username, clients[i].status);
 
-						// Buscamos a los usuarios que estan hablando con el usuario que cambio su estado
+						/* Buscamos a los usuarios que estan hablando con el usuario que cambio su estado */
 					    for (j=0; j<N; j++)
 					    {
 					        if (strcmp(clients[j].actualConversation, clients[i].username) == 0)
@@ -177,7 +180,7 @@ int main(int argc, char *argv[]) {
 					    }
 
                     }
-                    // Mostrar Lista de usuarios
+                    /* Mostrar Lista de usuarios */
                     else if (strcmp(token, ordenQuien) == 0)
                     {
                         strcpy(message, "");
@@ -188,19 +191,15 @@ int main(int argc, char *argv[]) {
                         {
                             if (strlen(clients[j].username) > 0)
                             {
-								//printf("j = |%d|\n", j);
-								//printf("clients[j].username = |%s|\n", clients[j].username);
 								strcat(message, clients[j].username);
 								strcat(message, ":");
-								//printf("clients[j].status = |%s|\n", clients[j].status);
 								strcat(message, clients[j].status);
 								strcat(message, "\n");
                             }
                         }
-                        //printf("i = |%d|\n", i);
                         write(clients[i].out_fd, message, MSG_LEN);
                     }
-                    // Cambio de conversacion
+                    /* Cambio de conversacion */
                     else if (strcmp(token, ordenCambiarConversacion) == 0)
                     {
                         token = strtok(NULL, " ");
@@ -215,29 +214,30 @@ int main(int argc, char *argv[]) {
                         	write(clients[i].out_fd, userNotFoundMessage, MSG_LEN);
                         }
                     }
-                    // Envio de un mensaje
+                    /* Envio de un mensaje */
                     else if (strcmp(token, ordenEscribir) == 0)
                     {
-                    	// Obtenemos el nombre de usuario
+                    	/* Obtenemos el nombre de usuario */
                         token = strtok(NULL, " ");
                         strcpy(username, token);
                         token = strtok(NULL, " ");
                         writeFull(token, message);
+                        /* Caso 1: Se encuentra al usuario en el servidor y se le envia el mensaje */
                         if (strcmp(searchUser(username),successMessage) == 0)
                         {
                             sprintf(tmp, "mensaje de %s: %s", clients[i].username, message);
                             sendMessage(username, tmp);
                         }
+                        /* Caso 2: No se encuentra al usuario, se envia un mensaje al cliente autor del mensaje */
                         else
                         {
                         	write(clients[i].out_fd, userNotFoundMessage, MSG_LEN);
                         }
-
                     }
-                    // Salid del sistema
+                    /* Salida del sistema */
                     else if (strcmp(token, ordenSalir) == 0)
                     {
-						// Buscamos a los usuarios que estan hablando con el usuario que cambio su estado
+						/* Buscamos a los usuarios que estan hablando con el usuario que cambio su estado */
 					    for (j=0; j<N; j++)
 					    {
 					        if (strcmp(clients[j].actualConversation, clients[i].username) == 0)
@@ -253,10 +253,9 @@ int main(int argc, char *argv[]) {
         }
         sleep(1);
     }
-
 }
 
-// FUNCIONES PARA REALIZAR DISTINTAS TAREAS DEL SERVIDOR
+/* FUNCIONES PARA REALIZAR DISTINTAS TAREAS DEL SERVIDOR */
 
 /*
  * Function:  initialize
