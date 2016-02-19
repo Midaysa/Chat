@@ -243,17 +243,6 @@ int main(int argc, char *argv[])
 
 			command[strlen(command)] = 0;          // sustituir \n por \0 al final
 
-			// Si No Se ha definido el usuario al escribir
-			if (dest == "")
-			{
-				wprintw(ventana1, "%s: %s\n", in_file_name, command);
-			}
-			// Si Se ha definido el usuario al escribir
-			else
-			{
-				wprintw(ventana1, "%s -> %s: %s\n", username, dest, command);
-			}
-
 			token = strtok(command, " ");      // token = primera palabra del comando
 			wrefresh(ventana1);
 
@@ -261,6 +250,7 @@ int main(int argc, char *argv[])
 
 			if (token[0] == '-')
 			{
+				wprintw(ventana1, "%s: %s\n", in_file_name, command);
 				// Caso 1.1: Cambiar Estado
 				if (strcmp(token, ordenEstoy) == 0)
 				{
@@ -313,11 +303,23 @@ int main(int argc, char *argv[])
 				{
 					wprintw(ventana1, "%s\n",ordenInvalida);
 				}
+
 			}
 
 			// Caso 2: Mensaje a enviar
 			else
 			{
+				// Si No Se ha definido el usuario al escribir
+				if (dest == "")
+				{
+					wprintw(ventana1, "%s: %s\n", in_file_name, command);
+				}
+				// Si Se ha definido el usuario al escribir
+				else
+				{
+					wprintw(ventana1, "%s -> %s: %s\n", username, dest, command);
+				}
+
 				// Si no hay conversacion selecionada rechazamos el mensaje
 				if (strcmp(dest,"") == 0)
 				{
