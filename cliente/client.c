@@ -26,7 +26,7 @@ WINDOW *ventana1, *ventana2;
 void displayCommandList();
 void enfocarVentana2();
 void limpiarVentana2();
-void write_full(char *token, char dst[]);
+void writeFull(char *token, char dst[]);
 static void sigkill_handler(int signo);
 
 int in_fd;						// pipes de entrada
@@ -264,7 +264,7 @@ int main(int argc, char *argv[])
 				// Caso 1.1: Cambiar Estado
 				if (strcmp(token, ordenEstoy) == 0)
 				{
-					write_full(token, command);
+					writeFull(token, command);
 					write(out_fd, command, MSG_LEN);
 					// mostrar en algun label de la GUI este estado
 				}
@@ -327,7 +327,7 @@ int main(int argc, char *argv[])
 				else
 				{
 					sprintf(message, "%s %s ",ordenEscribir, dest);
-					write_full(token, command);
+					writeFull(token, command);
 					strcat(message, command);
 					write(out_fd, message, MSG_LEN);
 				}
@@ -349,21 +349,15 @@ int main(int argc, char *argv[])
 }
 
 
+/*
 
-void write_full(char *token, char dst[]) {
-    char tmp[MSG_LEN] = "";
-
-    while (token != NULL) {
-        //printf("write_full :: %s\n", token);
-        strcat(tmp, token);
-        strcat(tmp, " ");
-        token = strtok(NULL, " ");
-    }
-    strcpy(dst, tmp);
-    dst[strlen(dst)-1] = 0;
-}
-
-/* Mueve el cursor al punto de inserci�n actual de la ventana 2. */
+/*
+ * Function:  enfocarVentana2
+ * --------------------
+ *  Mueve el cursor al punto de inserci�n actual de la ventana 2.
+ *
+ *  returns: void
+ */
 void enfocarVentana2() {
     int y, x;
     getyx(ventana2, y, x);
@@ -371,8 +365,16 @@ void enfocarVentana2() {
     wrefresh(ventana2);
 }
 
-/* Borra el contenido de la ventana 2 y ubica el cursor en la esquina
- * superior izquierda de esta ventana.
+/*
+ */
+
+/*
+ * Function:  limpiarVentana2
+ * --------------------
+ *  Borra el contenido de la ventana 2 y ubica el cursor en la esquina
+ *  superior izquierda de esta ventana.
+ *
+ *  returns: void
  */
 void limpiarVentana2() {
     wclear(ventana2);
@@ -381,12 +383,28 @@ void limpiarVentana2() {
     wrefresh(ventana2);
 }
 
+/*
+ * Function:  displayCommandList
+ * --------------------
+ *  Muestra la lista de comandos disponibles para el cliente
+ *
+ *  returns: void
+ */
 void displayCommandList()
 {
 	wprintw(ventana1, helpMenu);
 	wrefresh(ventana2);
 }
 
+/*
+ * Function:  sigkillHandler
+ * --------------------
+ *  Manejador de señales por si el cliente se cierra inesperadamente
+ *
+ *  signo:
+ *
+ *  returns: void
+ */
 static void sigkill_handler(int signo) {
 	wprintw(ventana2, "Cerrando Aplicación. Por favor espere.\n");
     write(out_fd, ordenSalir, MSG_LEN);

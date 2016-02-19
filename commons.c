@@ -1,19 +1,23 @@
 /*
- * ErrorHandling.c
+ * commons.c
+ *
+ *	Contiene los mensajes que se utilizan en el programa y ademas funciones comunes para el cliente
+ *	y el servidor
  *
  *  Created on: Jan 20, 2016
- *      Author: francisco
+ *      Author: francisco y midaysa
  */
 
 #include <stdlib.h>
 #include <string.h>             // strlen
 #include <stdio.h>              // printf
-#include "commons.h"
 #include <time.h>               // sleep
 #include <fcntl.h>              // O_NONBLOCK, etc
 #include <string.h>             // strlen
 #include <sys/stat.h>           // mkfifo
 
+#define BASIC_PERMISSIONS 0666
+#define MSG_LEN 500
 
 // Mensajes de error
 
@@ -136,9 +140,17 @@ char* getWord(char* string,char* delimeter,int index)
 }
 
 
-// crea y abre el pipe nominal fifo_name
-// retorna el file descriptor del pipe creado
-int open_fifo(const char *fifo_name) {
+/*
+ * Function:  openFifo
+ * --------------------
+ *  crea y abre el pipe nominal fifo_name retorna el file descriptor del pipe creado
+ *
+ *  fifo_name: nombre del pipe nominal
+ *
+ *  returns: void
+ */
+int openFifo(const char *fifo_name)
+{
     int fifo;
 
     // eliminar el pipe nominal creado en alguna otra ejecución del server
@@ -149,8 +161,33 @@ int open_fifo(const char *fifo_name) {
     mkfifo(fifo_name, BASIC_PERMISSIONS | O_NONBLOCK);
     // abrir el pipe para leer conexiones entrantes
     fifo = open(fifo_name, O_RDONLY | O_NONBLOCK);
-
     if (fifo == -1) perror("server mkfifo");
 
     return fifo;
+}
+
+/*
+ * Function:  writeFull
+ * --------------------
+ *  Escribe lo que le sobra a token dentro de dst
+ *
+ *  token: String original
+ *
+ *  dst: String destino
+ *
+ *  returns: void
+ */
+void writeFull(char *token, char dst[])
+{
+    char tmp[MSG_LEN] = "";
+
+    while (token != NULL)
+    {
+        strcat(tmp, token);
+        strcat(tmp, " ");
+        token = strtok(NULL, " ");
+    }
+
+    strcpy(dst, tmp);
+    dst[strlen(dst)-1] = 0;
 }

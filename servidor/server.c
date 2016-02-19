@@ -25,11 +25,11 @@ struct client {
 
 void initialize();
 void sendMessage(char username[], char message[]);
-void write_full(char *token, char dst[]);
+void writeFull(char *token, char dst[]);
 const char* searchUser(char username[]);
 void login(char username[], int in_fd, int out_fd);
 void logout(char username[]);
-static void sigkill_handler(int signo);
+static void sigkillHandler(int signo);
 
 int fifo;                   // fd del pipe del servidor
 char server_pipe_name[100]; // nombre del pipe nominal del servidor
@@ -52,9 +52,9 @@ int main(int argc, char *argv[]) {
     char *token;				// Variable usada para guardar las palabras separadas del
     							// input del usuario
     signal(SIGPIPE, SIG_IGN);	// Manejador de senales para SIGPIPE
-	signal(SIGINT, sigkill_handler);	// Manejador de senales para SIGINT
-	signal(SIGABRT, sigkill_handler);	// Manejador de senales para SIGINT
-	signal(SIGTERM, sigkill_handler);	// Manejador de senales para SIGINT
+	signal(SIGINT, sigkillHandler);	// Manejador de senales para SIGINT
+	signal(SIGABRT, sigkillHandler);	// Manejador de senales para SIGINT
+	signal(SIGTERM, sigkillHandler);	// Manejador de senales para SIGINT
 
     // Si se dio un nombre de server lo guardamos
     if (argc == 2)
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
 
     printf("%s\n",serverStartMessage);
 
-    fifo = open_fifo(server_pipe_name);
+    fifo = openFifo(server_pipe_name);
     if (fifo == -1) perror(getErrorMessage(openError,__LINE__,__FILE__));
     tv.tv_sec = 1;                  // 1 seg de timeout con 0 microsegs
     tv.tv_usec = 0;
@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
                 }
                 else
                 {
-                    fifo = open_fifo(server_pipe_name);
+                    fifo = openFifo(server_pipe_name);
                     in_fd = open(in_file_name, O_RDONLY | O_NONBLOCK);
                     out_fd = open(out_file_name, O_WRONLY | O_NONBLOCK);
                     login(username, in_fd, out_fd);
@@ -161,7 +161,7 @@ int main(int argc, char *argv[]) {
                     if (strcmp(token, ordenEstoy) == 0)
                     {
 						token = strtok(NULL, " ");
-						write_full(token, message);
+						writeFull(token, message);
 						//printf("client status = |%s|\n", message);
 						strcpy(clients[i].status, message);
 
@@ -222,7 +222,7 @@ int main(int argc, char *argv[]) {
                         token = strtok(NULL, " ");
                         strcpy(username, token);
                         token = strtok(NULL, " ");
-                        write_full(token, message);
+                        writeFull(token, message);
                         if (strcmp(searchUser(username),successMessage) == 0)
                         {
                             sprintf(tmp, "mensaje de %s: %s", clients[i].username, message);
@@ -258,7 +258,15 @@ int main(int argc, char *argv[]) {
 
 // FUNCIONES PARA REALIZAR DISTINTAS TAREAS DEL SERVIDOR
 
-// Inicializa el arreglo de clientes
+/*
+ * Function:  initialize
+ * --------------------
+ *
+ *  Inicializa el arreglo de clientes
+ *
+ *  returns: void
+ */
+
 void initialize() {
     int i, j;
 
@@ -271,8 +279,17 @@ void initialize() {
 }
 
 
-
-// Enviar mensaje al cliente indicado a través de su pipe
+/*
+ * Function:  sendMessage
+ * --------------------
+ *  Enviar mensaje al cliente indicado a través de su pipe
+ *
+ *  username: usuario al cual se le escribe el mensaje
+ *
+ *  message: Mensaje a enviar
+ *
+ *  returns: void
+ */
 void sendMessage(char username[], char message[])
 {
     int i;
@@ -285,21 +302,15 @@ void sendMessage(char username[], char message[])
     }
 }
 
-// escribe lo que le sobra a token dentro de dst
-void write_full(char *token, char dst[]) {
-    char tmp[MSG_LEN] = "";
-
-    while (token != NULL) {
-        strcat(tmp, token);
-        strcat(tmp, " ");
-        token = strtok(NULL, " ");
-    }
-
-    strcpy(dst, tmp);
-    dst[strlen(dst)-1] = 0;
-}
-
-// Busca a un usuario en la lista de usuarios del servidor
+/*
+ * Function:  searchUser
+ * --------------------
+ *  Busca a un usuario en la lista de usuarios del servidor
+ *
+ *  username: Nombre del usuario a buscar
+ *
+ *  returns: un mensaje de exito si lo encuentra, y otro sino lo encuentra
+ */
 const char* searchUser(char username[])
 {
     int i;
@@ -315,8 +326,19 @@ const char* searchUser(char username[])
     return userNotFoundMessage;
 }
 
-
-// Registrar los datos y pipes del usuario
+/*
+ * Function:  login
+ * --------------------
+ *  Registra los datos y pipes del usuario
+ *
+ *  username: Nombre del usuario a registrar
+ *
+ *  in_fd: Identificador del pipe con el que se leeran datos del cliente
+ *
+ *  out_fd: Identificador del pipe con el que se enviaran datos al cliente
+ *
+ *  returns: void
+ */
 void login(char username[], int in_fd, int out_fd) {
     int i;
 
@@ -334,7 +356,15 @@ void login(char username[], int in_fd, int out_fd) {
     write(out_fd, successMessage, strlen(successMessage));
 }
 
-// Eliminar al usuario de todas las listas de amigos y vaciar sus datos
+/*
+ * Function:  logout
+ * --------------------
+ *  Eliminar al usuario de todas las listas de amigos y vaciar sus datos
+ *
+ *  username: Nombre del usuario que se saldra del sistema
+ *
+ *  returns: void
+ */
 void logout(char username[])
 {
     int i, j, friend_id;
@@ -356,15 +386,27 @@ void logout(char username[])
             break;
         }
     }
-    //printf("%s %s\n",username,LogOutServerMessage);
 }
 
-
-// Toma la primera palabra de un arreglo
-char split_first(char str[], char first[], char second[]) {
+/*
+ * Function:  splitFirst
+ * --------------------
+ *  Toma la primera palabra de un arreglo
+ *
+ *  str: string original
+ *
+ *  first: La primera palabra
+ *
+ *  second: el resto del arreglo
+ *
+ *  returns: La primera palabra
+ */
+char splitFirst(char str[], char first[], char second[])
+{
     int i, j, len=strlen(str);
 
-    for (i=0; i<len; i++) {
+    for (i=0; i<len; i++)
+    {
         if (str[i] == ' ') break;
         else first[i] = str[i];
     }
@@ -378,10 +420,28 @@ char split_first(char str[], char first[], char second[]) {
     return second[j];
 }
 
-// Imprime un arreglo
-void print_array(int arr[]) {int i; for (i=0; i<N; i++) printf("%d ", arr[i]); printf("\n"); }
+/*
+ * Function:  printArray
+ * --------------------
+ *  Imprime un arreglo
+ *
+ *  arr: El arreglo a imprimir
+ *
+ *  returns: void
+ */
+void printArray(int arr[]) {int i; for (i=0; i<N; i++) printf("%d ", arr[i]); printf("\n"); }
 
-static void sigkill_handler(int signo) {
+/*
+ * Function:  sigkillHandler
+ * --------------------
+ *  Manejador de señales por si el servidor se cierra inesperadamente
+ *
+ *  signo:
+ *
+ *  returns: void
+ */
+static void sigkillHandler(int signo)
+{
 	printf("Saliendo...");
     unlink(server_pipe_name);	
     sleep(5);
