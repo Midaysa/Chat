@@ -29,7 +29,7 @@
 #define COLS_MIN 25 // Ancho m�nimo que debe tener el terminal
 #define TECLA_RETURN 0xD
 #define TAM 2048 // Tama�o de buffer
-#define WAIT 1
+#define WAIT 1	// Tiempo de espera de la herramienta select
 
 WINDOW *ventana1, *ventana2;
 
@@ -165,8 +165,9 @@ int main(int argc, char *argv[])
 
     /* Se envia al servidor los nombres de los pipes y el nombre de usuario para que pueda registrarlo */
     sprintf(message, "%s %s %s\n", username, in_file_name, out_file_name);
-    wprintw(ventana1,"message = %s\n", message);
-    write(fifo, message, strlen(message));
+    wprintw(ventana1,"message = %s", message);
+    wrefresh(ventana1);
+    write(fifo, message, MSG_LEN);
     close(fifo);
 
 

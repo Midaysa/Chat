@@ -352,7 +352,7 @@ void login(char username[], int in_fd, int out_fd) {
             break;
         }
     }
-    write(out_fd, successMessage, strlen(successMessage));
+    write(out_fd, successMessage, MSG_LEN);
 }
 
 /*
