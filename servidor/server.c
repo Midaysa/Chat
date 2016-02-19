@@ -29,7 +29,10 @@ void write_full(char *token, char dst[]);
 const char* searchUser(char username[]);
 void login(char username[], int in_fd, int out_fd);
 void logout(char username[]);
+static void sigkill_handler(int signo);
 
+int fifo;                   // fd del pipe del servidor
+char server_pipe_name[100]; // nombre del pipe nominal del servidor
 
 int main(int argc, char *argv[]) {
     struct timeval tv;          // estructura para indicar el timeout de select
@@ -40,17 +43,18 @@ int main(int argc, char *argv[]) {
     char message[MSG_LEN];      // string de datos enviados desde los clientes
                                 // al servidor y viceversa
     char tmp[MSG_LEN];          // string temporal para agregar origen de mensaje
-    int fifo;                   // fd del pipe del servidor
     fd_set fdset, error_fdset;  // crear sets de pipes nominales
     char in_file_name[11],     	// nombre de los pipes de entrada
          out_file_name[11];
     int in_fd, out_fd;          // file descriptors temporales para clientes
     char username[30];          // nombre temporal para clientes
-    char server_pipe_name[100]; // nombre del pipe nominal del servidor
     int i, j;                   // variables de iteración simple
     char *token;				// Variable usada para guardar las palabras separadas del
     							// input del usuario
     signal(SIGPIPE, SIG_IGN);	// Manejador de senales para SIGPIPE
+	signal(SIGINT, sigkill_handler);	// Manejador de senales para SIGINT
+	signal(SIGABRT, sigkill_handler);	// Manejador de senales para SIGINT
+	signal(SIGTERM, sigkill_handler);	// Manejador de senales para SIGINT
 
     // Si se dio un nombre de server lo guardamos
     if (argc == 2)
@@ -138,17 +142,17 @@ int main(int argc, char *argv[]) {
             	// Se recibio input de parte del usuario
                 if (FD_ISSET(clients[i].in_fd, &fdset))
                 {
-                    printf("comando recibido de |%s|\n", clients[i].username);
+                    //printf("comando recibido de |%s|\n", clients[i].username);
                     strcpy(message, "");
                     read(clients[i].in_fd, message, MSG_LEN);
-                    printf("message = |%s|\n", message);
+                    //printf("message = |%s|\n", message);
                     token = strtok(message, " ");      // token = primera palabra del comando
-                    printf("token = |%s|\n", token);
+                    //printf("token = |%s|\n", token);
 
                     // Detectamos si el usuario no esta en linea
                     if (token == NULL && strcmp(clients[i].username,"") != 0)
                     {
-                        printf("null token\n");
+                        //printf("null token\n");
                         logout(clients[i].username);
                         continue;
                     }
@@ -158,7 +162,7 @@ int main(int argc, char *argv[]) {
                     {
 						token = strtok(NULL, " ");
 						write_full(token, message);
-						printf("client status = |%s|\n", message);
+						//printf("client status = |%s|\n", message);
 						strcpy(clients[i].status, message);
 
 						sprintf(message, "%s ha cambiado de estado a: %s", clients[i].username, clients[i].status);
@@ -184,19 +188,19 @@ int main(int argc, char *argv[]) {
                         {
                             if (strlen(clients[j].username) > 0)
                             {
-								printf("j = |%d|\n", j);
-								printf("clients[j].username = |%s|\n", clients[j].username);
+								//printf("j = |%d|\n", j);
+								//printf("clients[j].username = |%s|\n", clients[j].username);
 								strcat(message, clients[j].username);
 								strcat(message, ":");
-								printf("clients[j].status = |%s|\n", clients[j].status);
+								//printf("clients[j].status = |%s|\n", clients[j].status);
 								strcat(message, clients[j].status);
 								strcat(message, "\n");
                             }
                         }
-                        printf("i = |%d|\n", i);
+                        //printf("i = |%d|\n", i);
                         write(clients[i].out_fd, message, MSG_LEN);
                     }
-                    // Cambio dde conversacion
+                    // Cambio de conversacion
                     else if (strcmp(token, ordenCambiarConversacion) == 0)
                     {
                         token = strtok(NULL, " ");
@@ -233,14 +237,21 @@ int main(int argc, char *argv[]) {
                     // Salid del sistema
                     else if (strcmp(token, ordenSalir) == 0)
                     {
+						// Buscamos a los usuarios que estan hablando con el usuario que cambio su estado
+					    for (j=0; j<N; j++)
+					    {
+					        if (strcmp(clients[j].actualConversation, clients[i].username) == 0)
+					        {
+								sprintf(message, "%s se ha desconectado", clients[i].username);
+					        	write(clients[j].out_fd, message, MSG_LEN);
+					        }
+					    }
                         logout(clients[i].username);
                     }
                 }
             }
         }
         sleep(1);
-
-
     }
 
 }
@@ -345,7 +356,7 @@ void logout(char username[])
             break;
         }
     }
-    printf("%s %s\n",username,LogOutServerMessage);
+    //printf("%s %s\n",username,LogOutServerMessage);
 }
 
 
@@ -369,3 +380,11 @@ char split_first(char str[], char first[], char second[]) {
 
 // Imprime un arreglo
 void print_array(int arr[]) {int i; for (i=0; i<N; i++) printf("%d ", arr[i]); printf("\n"); }
+
+static void sigkill_handler(int signo) {
+	printf("Saliendo...");
+    unlink(server_pipe_name);	
+    sleep(5);
+    close(fifo);
+    exit(0);
+}

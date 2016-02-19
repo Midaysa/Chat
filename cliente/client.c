@@ -19,7 +19,7 @@
 #define COLS_MIN 25 // Ancho m�nimo que debe tener el terminal
 #define TECLA_RETURN 0xD
 #define TAM 2048 // Tama�o de buffer
-#define WAIT 3
+#define WAIT 1
 
 WINDOW *ventana1, *ventana2;
 
@@ -27,21 +27,22 @@ void displayCommandList();
 void enfocarVentana2();
 void limpiarVentana2();
 void write_full(char *token, char dst[]);
-void sigintHandler(int dummy);
+static void sigkill_handler(int signo);
+
+int in_fd;						// pipes de entrada
+int out_fd;                     // pipes de salida
+char in_file_name[NAME_LEN];
+char out_file_name[NAME_LEN];  // nombre de los
+							   //pipes de entrada
+							   // y salida de cada usuario
 
 
 /* Hay que permitir que se le pasen argumentos al cliente */
 int main(int argc, char *argv[])
 {
     int len;
-    char in_file_name[NAME_LEN];
-    char out_file_name[NAME_LEN];  // nombre de los
-								   //pipes de entrada
-								   // y salida de cada usuario
     int fifo;                              // pipe "servidor" para
 										   // solicitar una nueva conexion
-    int in_fd;						// pipes de entrada
-    int out_fd;                     // pipes de salida
     char server_pipe_name[NAME_LEN];
     char username[NAME_LEN];
     char command[MSG_LEN];
@@ -56,6 +57,10 @@ int main(int argc, char *argv[])
 	fd_set readfds;	// fd_set para la entrada de datos
 	struct timeval timeoutInput;	// Estructura para definir el timeout
 	int    num_readable;	// Variable que indica si hay datos en el pipe de entrada
+	signal(SIGINT, sigkill_handler);	// Manejador de senales para SIGINT
+	signal(SIGABRT, sigkill_handler);	// Manejador de senales para SIGINT
+	signal(SIGTERM, sigkill_handler);	// Manejador de senales para SIGINT
+
 
     srand(time(NULL));                         // inicializa semilla del random
 
@@ -241,12 +246,12 @@ int main(int argc, char *argv[])
 			// Si No Se ha definido el usuario al escribir
 			if (dest == "")
 			{
-				wprintw(ventana1, "%s: %s\n", in_file_name,command);
+				wprintw(ventana1, "%s: %s\n", in_file_name, command);
 			}
 			// Si Se ha definido el usuario al escribir
 			else
 			{
-				wprintw(ventana1, "%s -> %s: %s\n", username,dest,command);
+				wprintw(ventana1, "%s -> %s: %s\n", username, dest, command);
 			}
 
 			token = strtok(command, " ");      // token = primera palabra del comando
@@ -376,14 +381,20 @@ void limpiarVentana2() {
     wrefresh(ventana2);
 }
 
-void sigintHandler(int dummy)
-{
-    endwin(); // Restaurar la operaci�n del terminal a modo normal
-    exit(0);
-}
-
 void displayCommandList()
 {
 	wprintw(ventana1, helpMenu);
 	wrefresh(ventana2);
+}
+
+static void sigkill_handler(int signo) {
+	wprintw(ventana2, "Cerrando Aplicación. Por favor espere.\n");
+    write(out_fd, ordenSalir, MSG_LEN);
+	close(out_fd);
+    sleep(5);
+    unlink(out_file_name);
+    close(in_fd);
+    unlink(in_file_name);
+    endwin(); // Restaurar la operaci�n del terminal a modo normal
+    exit(0);
 }
