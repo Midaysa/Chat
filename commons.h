@@ -54,7 +54,8 @@ extern const char *userNameNotAvaible;
 
 char* getErrorMessage(const char* errorMessage,int line, char* file);
 char* getWord(char* string,char* delimeter,int index);
-int open_fifo(const char *fifo_name);
+int openFifo(const char *fifo_name);
+void writeFull(char *token, char dst[]);
 
 
 #endif /* COMMONS_H_ */

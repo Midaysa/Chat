@@ -1,0 +1,132 @@
+CI-3825 Sistemas De Operacion I
+Proyecto I -Chat 
+Midaysa Palacios y Francisco Sucre
+
+Nuestro proyect "Chat" consta de dos programas distintos. 
+
+Tenemos un programa Servidor que se encarga de recibir conexiones de clientes,
+solicitudes y mensajes y distribuirlos entre los usuarios como sea
+necesario. Este se comunica por medio de pipes con todos los programas clientes
+y recibe a traves de estos las solicitudes que necesitan los usuarios.
+En el servidor es donde se guardan los datos de lso clientes desde su nombre de
+usuario hasta su estado, siendo en este programa donde se realizan los cambios y
+el cliente solo accede a la data del servidor.
+
+Luego tenemos el programa Cliente, el cual actua como un
+punto de acceso a nuestro sistema para que el usuario pueda interactuar
+con el, el usuario iniciara el proceso escogiendo un nombre de usuario
+y el nombre del servidor al que desea conectarse (el cual debe estar
+ejecutandose previamente), y si el nombre de usuario es valido 
+y no esta en uso, se registrara al usuario en el servidor. 
+
+Es importante destacar que si el usuario no ingresa un
+nombre de usuario entonces iniciara sesion como el usuario de sistema
+y que si no indica a cual servidor quiere ingresar, ingresara al 
+servidor por defecto.
+
+Inmediatamente se inicialzara la interfaz del programa implementada
+con ncurses, una libreria utilizada para crear aplicaciones basadas en
+la linea de comandos. La linea de comandos se separara en dos secciones,
+la superior sera el recipiente de todos los mensajes del servidor mientras
+que la inferior esta reservada exclusivamente para la escritura.
+
+Como cliente luego de registrarse podra tomar 2 acciones, podra
+escribir un commando o un mensaje, los commandos son palabras especiales
+precedidas por un "-" las cuales ejecutaran una accion predeterminada
+en el sistema, los commandos disponibles y sus funciones son:
+
+	-quien: Muestra una lista de los usuarios conectados
+	-estoy <Nuevo estado>: Cambia el estado actual
+	-escribir <Usuario a escribir>: Cambia el usuario a escribir
+	-salir: Cierra Sesion 
+	-ayuda: Muestra menu de commandos
+
+	NOTA: Lo encerrado entre <> son parametros que el usuario debe 
+	ingresar. Ej: -escrbir Pepe
+
+	NOTA: Si escribe una palabra no incluida en esta lista con un "-" se
+	considerara un comando invalido y el programa le remitira un mensaje
+	de error
+
+Cualquier otra cadena de caracteres que escriba que no sea precedida por un "-"
+se tomara como un mensaje hacia la persona con la que el usuario ha elegido
+conversar previamente. Si la persona no se encuentra en el servidor o si se ha
+desconectado despues de haber establecido una conversacion con el, el servidor
+nos enviara un mensaje de error pidiendo que cambiemos de conversacion.
+
+Instrucciones:
+
+	Compilacion:
+	
+		Para crear los ejecutables de nuestro programa solo se requiere
+		de un commando, ubicandonos en el directorio base de nuestro
+		proyecto ejecutamos el siguiente comando:
+
+		"make proyect"
+
+		Esto creara los ejecutables del cliente y el servidor dentro de
+		la carpeta "executables" listo para ejecutarse. Si por alguna razon
+		necesita borrar dichos ejectubles, puede hacerlo con el siguiente
+		comando en la linea de comandos, ubicandose en la carpeta base del
+		proyecto
+
+		"make clean"
+
+	Ejecucion:
+
+		Abrimos nuestras lineas de comando en la carpeta executables
+
+		server: Para ejecutar el servidor basta con correr el siguiente comando
+	
+			"./server <nombreDelServidor>"
+
+		client: Para ejecutar el servidor basta con correr el siguiente comando
+
+			"./client <-p nombreDelServidor> <nombreDeUsuario>"
+
+			Nota: el nombre del servidor debe estar precedido obligatoriamente por "-p"
+
+			
+
+Archivos:
+
+	Cliente: Directorio donde se encuentran los archivos del programa client
+
+		client.c: archivo principal del programa client, contiene todo su codigo fuente
+	
+		makefile: Archivo que define y automatiza la compilacion del programa client
+
+	commons.c: codigo fuente que contiene los mensajes utilizados en el proyecto por client y server, tambien
+	contiene algunas funciones de uso comun entre los programas
+
+	commons.h: archivo header de commons.c utilizado para importar sus constantes y funciones al programa cliente y
+	al programa server
+
+	ConectarseAlLdc.sh: script utilizado para conectarse a una computadora del LDC utilizando la cuenta 10-10717
+
+	Executables: Directorio donde se crearan los ejecutables del proyecto, ademas de los archivos creados
+	en su ejecucion
+
+		readme: Archivo explicativo que informa el uso del directorio, se utilizo para poder inicializar
+		dicho directorio en el repositorio Git utilizado en el proyecto
+
+	Makefile: Archivo que automatiza la compilacion de los programas del proyecto completo
+
+	limpiarYEnviarAlLdc.sh: script utilizado para enviar los archivos del proyecto a una direccion fija del LDC con
+	la cuenta 10-10717
+
+	proy1S2015.pdf: Enunciado original del proyecto
+
+	Servidor: Directorio donde se encuentran los archivos del programa server
+
+		makefile: Archivo que define y automatiza la compilacion del programa server
+
+		server.c: archivo principal del programa server, contiene todo su codigo fuente
+
+
+
+
+
+
+
+
