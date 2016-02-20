@@ -6,7 +6,11 @@ Nuestro proyect "Chat" consta de dos programas distintos.
 
 Tenemos un programa Servidor que se encarga de recibir conexiones de clientes,
 solicitudes y mensajes y distribuirlos entre los usuarios como sea
-necesario. 
+necesario. Este se comunica por medio de pipes con todos los programas clientes
+y recibe a traves de estos las solicitudes que necesitan los usuarios.
+En el servidor es donde se guardan los datos de lso clientes desde su nombre de
+usuario hasta su estado, siendo en este programa donde se realizan los cambios y
+el cliente solo accede a la data del servidor.
 
 Luego tenemos el programa Cliente, el cual actua como un
 punto de acceso a nuestro sistema para que el usuario pueda interactuar
@@ -86,17 +90,43 @@ Instrucciones:
 
 Archivos:
 
-Cliente:
+	Cliente: Directorio donde se encuentran los archivos del programa client
 
-Servidor:
+		client.c: archivo principal del programa client, contiene todo su codigo fuente
+	
+		makefile: Archivo que define y automatiza la compilacion del programa client
 
-Executables: 
+	commons.c: codigo fuente que contiene los mensajes utilizados en el proyecto por client y server, tambien
+	contiene algunas funciones de uso comun entre los programas
 
-Directorios:
+	commons.h: archivo header de commons.c utilizado para importar sus constantes y funciones al programa cliente y
+	al programa server
 
-servidor
+	ConectarseAlLdc.sh: script utilizado para conectarse a una computadora del LDC utilizando la cuenta 10-10717
 
-server.c :
+	Executables: Directorio donde se crearan los ejecutables del proyecto, ademas de los archivos creados
+	en su ejecucion
+
+		readme: Archivo explicativo que informa el uso del directorio, se utilizo para poder inicializar
+		dicho directorio en el repositorio Git utilizado en el proyecto
+
+	Makefile: Archivo que automatiza la compilacion de los programas del proyecto completo
+
+	limpiarYEnviarAlLdc.sh: script utilizado para enviar los archivos del proyecto a una direccion fija del LDC con
+	la cuenta 10-10717
+
+	proy1S2015.pdf: Enunciado original del proyecto
+
+	Servidor: Directorio donde se encuentran los archivos del programa server
+
+		makefile: Archivo que define y automatiza la compilacion del programa server
+
+		server.c: archivo principal del programa server, contiene todo su codigo fuente
+
+
+
+
+
 
 
 
