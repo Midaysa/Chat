@@ -347,6 +347,7 @@ void logout(char username[])
         {
             strcpy(clients[i].username, "");
             strcpy(clients[i].status, "");
+            strcpy(clients[i].actualConversation, "");
             close(clients[i].in_fd);
             close(clients[i].out_fd);
             clients[i].in_fd = 0;
