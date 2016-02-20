@@ -120,8 +120,6 @@ Archivos:
 	limpiarYEnviarAlLdc.sh: script utilizado para enviar los archivos del proyecto a una direccion fija del LDC con
 	la cuenta 10-10717
 
-	proy1S2015.pdf: Enunciado original del proyecto
-
 	Servidor: Directorio donde se encuentran los archivos del programa server
 
 		makefile: Archivo que define y automatiza la compilacion del programa server
