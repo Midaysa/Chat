@@ -56,7 +56,8 @@ int main(int argc, char *argv[])
 	int    fd_stdin;	// identificador del pipe de stdin
 	fd_set readfds;	// fd_set para la entrada de datos
 	struct timeval timeoutInput;	// Estructura para definir el timeout
-	int    num_readable;	// Variable que indica si hay datos en el pipe de entrada
+	int    num_readable;	// Indica si hay datos en el pipe de entrada
+	int    r;				// Numero aleatorio para los nombres de los pipes
 	signal(SIGINT, sigkill_handler);	// Manejador de senales para SIGINT
 	signal(SIGABRT, sigkill_handler);	// Manejador de senales para SIGINT
 	signal(SIGTERM, sigkill_handler);	// Manejador de senales para SIGINT
@@ -73,43 +74,44 @@ int main(int argc, char *argv[])
 
 	else if (argc > 1 && argc <= 4)
 	{
-		// Si recibo un argumento con el prefijo -p entonces asigno un nombre de pipe
-			if ((strcmp(argv[1],"-p")) == 0)
+		// Si recibo un argumento con el prefijo -p entonces 
+		// asigno un nombre de pipe
+		if ((strcmp(argv[1],"-p")) == 0)
+		{
+			strcpy(server_pipe_name, argv[2]);
+
+			// Si recibo otro argumento entonces defino el nombre de usuario
+			if (argc == 4)
 			{
-				strcpy(server_pipe_name, argv[2]);
-
-				// Si recibo otro argumento entonces defino el nombre de usuario
-				if (argc == 4)
-				{
-					strcpy(username, argv[3]);
-				}
-
-				// Si no recibo otro argumento entonces es el usuario del sistema
-				else
-				{
-					strcpy(username, defaultUsername);
-				}
+				strcpy(username, argv[3]);
 			}
 
-			// Si no recibo el argumento del pipe
+			// Si no recibo otro argumento entonces es el usuario del sistema
 			else
 			{
-				// Si no defino nombre de servidor, escogo el nombre por defecto
-				strcpy(server_pipe_name, defaultServer);
-
-				// Recibo un usuario
-				if (argc == 2)
-				{
-			        strcpy(username, argv[1]);
-				}
-
-				// Recibo argumentos pero en el orden incorrecto
-				else
-				{
-					printf("%s \n",argOrdError);
-					exit(0);
-				}
+				strcpy(username, defaultUsername);
 			}
+		}
+
+		// Si no recibo el argumento del pipe
+		else
+		{
+			// Si no defino nombre de servidor, escogo el nombre por defecto
+			strcpy(server_pipe_name, defaultServer);
+
+			// Recibo un usuario
+			if (argc == 2)
+			{
+		        strcpy(username, argv[1]);
+			}
+
+			// Recibo argumentos pero en el orden incorrecto
+			else
+			{
+				printf("%s \n",argOrdError);
+				exit(0);
+			}
+		}
 	}
 
     // Si recibo mas de 4 argumentos hay un error
@@ -132,14 +134,25 @@ int main(int argc, char *argv[])
     nonl();
 
     alto1 = LINES - ALTO;
-    ventana1 = newwin(alto1, 0, 0, 0); // Crear la ventana 1
-    ventana2 = newwin(ALTO, 0, alto1, 0); // Crear la ventana 2
-    scrollok(ventana1, TRUE); //Activar el corrimiento autom�tico en la ventana 1
+    ventana1 = newwin(alto1, 0, 0, 0); 		// Crear la ventana 1
+    ventana2 = newwin(ALTO, 0, alto1, 0); 	// Crear la ventana 2
+    scrollok(ventana1, TRUE); // Activar corrimiento autom�tico en la ventana 1
     scrollok(ventana2, TRUE);
-    limpiarVentana2(); // Dibujar la l�nea horizontal
+    limpiarVentana2(); 		  // Dibujar la l�nea horizontal
 
     strcpy(in_file_name, username);
     strcpy(out_file_name, username);
+    
+    srand(time(NULL));                        // inicializa semilla del random
+    
+	// calcula un numero aleatorio grande
+	r = rand() % 1000000000 + 1000000000;
+	// convierte el numero a char y lo almacena en in_file_name y out_file_name
+	sprintf(out_file_name, "%d", r);
+	sprintf(in_file_name, "%d", r);
+    
+    // agrega _in y _out al final para diferenciar entre pipe de salida y de 
+    // entrada
     strcat(in_file_name, "_in");
     strcat(out_file_name, "_out");
 
