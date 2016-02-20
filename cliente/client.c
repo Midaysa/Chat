@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
     
     srand(time(NULL));                        // inicializa semilla del random
     
-	// calcula un numero aleatorio grande
+	// calcula un numero aleatorio grande para dar pipes unicos a cada usuario
 	r = rand() % 1000000000 + 1000000000;
 	// convierte el numero a char y lo almacena en in_file_name y out_file_name
 	sprintf(out_file_name, "%d", r);
@@ -433,7 +433,7 @@ void displayCommandList()
  * --------------------
  *  Manejador de señales por si el cliente se cierra inesperadamente
  *
- *  signo:
+ *  signo: numero de la señal recibida, provisto por el sistema operativo
  *
  *  returns: void
  */
