@@ -4,36 +4,33 @@ Midaysa Palacios y Francisco Sucre
 
 Nuestro proyect "Chat" consta de dos programas distintos. 
 
-Tenemos un programa Servidor que se encarga de recibir conexiones de clientes,
-solicitudes y mensajes y distribuirlos entre los usuarios como sea
-necesario. Este se comunica por medio de pipes con todos los programas clientes
-y recibe a traves de estos las solicitudes que necesitan los usuarios.
-En el servidor es donde se guardan los datos de lso clientes desde su nombre de
-usuario hasta su estado, siendo en este programa donde se realizan los cambios y
-el cliente solo accede a la data del servidor.
+- Un programa Servidor que se encarga de recibir conexiones de clientes y 
+  procesa sus solicitudes de acuerdo a lo que pida. Aqui se guardan los
+  datos de los usuarios y se gestionan las operaciones que los mismos solicitan.
+  La conexion entre este programa y el cliente se realiza a traves de pipes 
+  nominales.
 
-Luego tenemos el programa Cliente, el cual actua como un
-punto de acceso a nuestro sistema para que el usuario pueda interactuar
-con el, el usuario iniciara el proceso escogiendo un nombre de usuario
-y el nombre del servidor al que desea conectarse (el cual debe estar
-ejecutandose previamente), y si el nombre de usuario es valido 
-y no esta en uso, se registrara al usuario en el servidor. 
+- Un programa Cliente, el cual actua como un punto de acceso a nuestro sistema 
+  para que el usuario pueda hacer uso del chat. El usuario iniciara el proceso 
+  escogiendo un nombre de usuario y el nombre del servidor al que desea 
+  conectarse (el cual debe estar ejecutandose previamente). Si el nombre de 
+  usuario es valido y no esta en uso, se registrara al usuario en el servidor.
+  Es importante destacar que si el usuario no ingresa un nombre de usuario 
+  entonces iniciara sesion como el usuario de sistema y que si no indica a cual
+  servidor quiere ingresar, ingresara al 
+  servidor por defecto.
 
-Es importante destacar que si el usuario no ingresa un
-nombre de usuario entonces iniciara sesion como el usuario de sistema
-y que si no indica a cual servidor quiere ingresar, ingresara al 
-servidor por defecto.
+Al realizar la conexion con el cliente, inmediatamente se inicialzara la 
+interfaz del programa implementada con ncurses, una libreria utilizada para 
+crear aplicaciones basadas en la linea de comandos. La linea de comandos se 
+separara en dos secciones, la superior sera el recipiente de todos los mensajes
+del servidor mientras que la inferior esta reservada exclusivamente para la 
+escritura.
 
-Inmediatamente se inicialzara la interfaz del programa implementada
-con ncurses, una libreria utilizada para crear aplicaciones basadas en
-la linea de comandos. La linea de comandos se separara en dos secciones,
-la superior sera el recipiente de todos los mensajes del servidor mientras
-que la inferior esta reservada exclusivamente para la escritura.
-
-Como cliente luego de registrarse podra tomar 2 acciones, podra
-escribir un commando o un mensaje, los commandos son palabras especiales
-precedidas por un "-" las cuales ejecutaran una accion predeterminada
-en el sistema, los commandos disponibles y sus funciones son:
+Como cliente luego de registrarse podra tomar 2 acciones: escribir un commando 
+o un mensaje. Los commandos son palabras especiales precedidas por un "-", las 
+cuales ejecutaran una accion predeterminada en el sistema.
+Los commandos disponibles y sus funciones son:
 
 	-quien: Muestra una lista de los usuarios conectados
 	-estoy <Nuevo estado>: Cambia el estado actual
@@ -47,12 +44,20 @@ en el sistema, los commandos disponibles y sus funciones son:
 	NOTA: Si escribe una palabra no incluida en esta lista con un "-" se
 	considerara un comando invalido y el programa le remitira un mensaje
 	de error
+	
+	NOTA: Para el comando "-estoy <Nuevo estado>" tal como se indica, se escribe 
+	al lado del comando el estado que se quiere poner. En cambio para 
+	"escribir <Usuario a escribir>" se ingresa primero el comando seguido del 
+	usuario al que se le desea escribir, se presiona enter, y tras esto, todos 
+	los mensaje que se envien se dirijiran a este usuario, hasta que se ingrese
+	otro comando.
+
 
 Cualquier otra cadena de caracteres que escriba que no sea precedida por un "-"
 se tomara como un mensaje hacia la persona con la que el usuario ha elegido
 conversar previamente. Si la persona no se encuentra en el servidor o si se ha
 desconectado despues de haber establecido una conversacion con el, el servidor
-nos enviara un mensaje de error pidiendo que cambiemos de conversacion.
+nos enviara un mensaje de error.
 
 Instrucciones:
 
@@ -62,7 +67,7 @@ Instrucciones:
 		de un commando, ubicandonos en el directorio base de nuestro
 		proyecto ejecutamos el siguiente comando:
 
-		"make proyect"
+		"make proyect" o "make"
 
 		Esto creara los ejecutables del cliente y el servidor dentro de
 		la carpeta "executables" listo para ejecutarse. Si por alguna razon
